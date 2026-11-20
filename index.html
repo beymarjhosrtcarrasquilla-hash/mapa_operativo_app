@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mapa Operativo Visual - Flujograma Central</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: #161b22;
+      border-bottom: 1px solid #00e5ff44;
+      padding: 8px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+    .nav-group, .ctrl-group { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    button {
+      background: #0d1117;
+      color: #00e5ff;
+      border: 1px solid #00e5ff66;
+      padding: 5px 9px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: 0.15s;
+    }
+    button:hover { background: #00e5ff22; border-color: #00e5ff; }
+    #workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+    #viewport {
+      flex: 1;
+      overflow: hidden;
+      cursor: grab;
+      position: relative;
+      background-image: radial-gradient(#00e5ff18 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #viewport:active { cursor: grabbing; }
+    #canvas-container {
+      transform-origin: 0 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    #editor-panel {
+      width: 380px;
+      background: #161b22;
+      border-left: 1px solid #00e5ff44;
+      display: none;
+      flex-direction: column;
+      padding: 10px;
+      gap: 8px;
+    }
+    #editor-panel.open { display: flex; }
+    textarea {
+      flex: 1;
+      background: #0d1117;
+      color: #7ee787;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      resize: none;
+    }
+    #zoom-badge { font-size: 12px; color: #8b949e; min-width: 48px; text-align: center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-group">
+      <button onclick="resetView()">Reset</button>
+      <button onclick="focusNode('Inicio')">Inicio</button>
+      <button onclick="focusNode('Trabajo')">Trabajo</button>
+      <button onclick="focusNode('Estudio')">Estudio</button>
+      <button onclick="focusNode('Analizar')">Analizar</button>
+      <button onclick="focusNode('Repasar')">Repasar</button>
+      <button onclick="focusNode('Entendimiento')">Entendimiento</button>
+      <button onclick="focusNode('Ordenar')">Ordenar</button>
+      <button onclick="focusNode('Escribir')">Escribir</button>
+      <button onclick="focusNode('Investigar')">Investigar</button>
+    </div>
+    <div class="ctrl-group">
+      <button onclick="zoomBy(0.75)">-</button>
+      <span id="zoom-badge">100%</span>
+      <button onclick="zoomBy(1.35)">+</button>
+      <button onclick="toggleEditor()">Editar / Agregar</button>
+    </div>
+  </header>
+  <div id="workspace">
+    <div id="viewport">
+      <div id="canvas-container"></div>
+    </div>
+    <div id="editor-panel">
+      <strong>Código Mermaid en vivo</strong>
+      <textarea id="mermaid-input" oninput="renderDiagram()"></textarea>
+    </div>
+  </div>
+  <script>
+    const defaultCode = `flowchart TD
+  Inicio([Inicio]) --> Q1{¿Qué necesitas hacer?}
+
+  Q1 -->|Ganar dinero| CT[Clase Trabajo]
+  Q1 -->|Algo personal| AP[Apartado Personal]
+  Q1 -->|Algo productivo| AProd[Apartado Productivo]
+  Q1 -->|Estudiar| CE[class Estudio]
+
+  subgraph Trabajo [Clase Trabajo]
+    CT --> QT{¿En qué quieres trabajar?}
+    QT -->|Crear contenido| YT[Contenido para YouTube] --> YT1[Definir objetivo y público] --> YT2[Investigar y analizar] --> YT3[Crear contenido y publicar] --> YT4[Evaluar resultados] --> EvalT
+    QT -->|Camisetas y estampado| ONR[ON RAD4R / Estampado] --> ONR1[Investigar mercado] --> ONR2[Investigar demanda] --> ONR3[Evaluar costos y recursos] --> ONR4[Definir productos y estética] --> EvalT
+    QT -->|Dar clases| MUS[Clases de música] --> MUS1[Definir oferta de clases] --> MUS2[Organizar enseñanza] --> EvalT
+    QT -->|Servicio técnico| TEC[Servicio técnico] --> TEC1[Identificar servicios] --> TEC2[Evaluar recursos y ejecución] --> EvalT
+    QT -->|Motorratón / Rappi| MOT[Motorratón / Rappi] --> MOT1[Evaluar pedidos y ganancias] --> MOT2[Definir cuándo conviene salir] --> EvalT
+    EvalT[Evaluar resultados y rentabilidad] --> RegT[Registrar métodos y herramientas] --> RetT([return])
+  end
+
+  subgraph Personal [Apartado Personal]
+    AP --> DesP[Desarrollo interno personal]
+  end
+
+  subgraph Productivo [Apartado Productivo]
+    AProd --> F1[F1 / Proyectos productivos]
+  end
+
+  subgraph Estudio [class Estudio]
+    CE --> QE{¿Qué método necesitas?}
+    QE -->|Analizar información| M1[class AnalizarInforma]
+    QE -->|Repasar| M2[Método Repasar]
+    QE -->|Entender| M3[class Entendimiento]
+    QE -->|Ordenar texto| M4[class OrdenarTexto]
+    QE -->|Escribir| M5[class Escribir]
+    QE -->|Investigar| M6[class Investigar]
+  end
+
+  subgraph Analizar [class AnalizarInforma]
+    M1 --> A1[Leer y resaltar información] --> A2{¿Qué tipo de información?}
+    A2 -->|Definición| C1[Verde]
+    A2 -->|Idea secundaria| C2[Azul]
+    A2 -->|Proceso o acción| C3[Amarillo]
+    A2 -->|Conclusión| C4[Naranja]
+    C1 & C2 & C3 & C4 --> A3[Numerar ideas relevantes] --> A4[Identificar relaciones] --> A5[Anotar código + número] --> RetA([return])
+    Codigos["CÓDIGOS:<br/>D: Define | EX: Explica<br/>AP: Apoya o justifica | EJ: Ejemplifica<br/>RF: Refuta o contradice | CA: Causa/consecuencia<br/>SO: Propone solución | PR: Describe proceso<br/>CN: Concluye"]
+    A3 -.-> Codigos
+  end
+
+  subgraph Repasar [Método Repasar]
+    M2 --> R1{¿Qué necesitas hacer?}
+    R1 -->|Preparar repaso| R2[Generar flashcards] --> R3[Obtener información] --> R4[Generar flashcards con IA/Radar] --> R5[Guardar por materia]
+    R1 -->|Repasar| R6[Repaso espaciado] --> R7[Escribir lo aprendido]
+  end
+
+  subgraph Entendimiento [class Entendimiento]
+    M3 --> E1{¿Qué te falta?}
+    E1 -->|Información| E2[Investigar] --> E4[Practicar]
+    E1 -->|Comprensión| E3[Solicitar explicación] --> E4
+    E4 --> E5{¿Comprendes?}
+    E5 -->|No| E1
+    E5 -->|Sí| RetE([return])
+  end
+
+  subgraph Ordenar [class OrdenarTexto]
+    M4 --> O1[Consultar información] --> O2[Identificar objetivo] --> O3{¿Qué estructura conviene?}
+    O3 -->|Explicar| S1[Concepto - características]
+    O3 -->|Argumentar| S2[Tesis - argumentos - conclusión]
+    O3 -->|Informar| S3[Información principal - detalles]
+    O3 -->|Narrar| S4[Situación inicial - nudo - desenlace]
+    O3 -->|Describir| S5[Presentación - características]
+    O3 -->|Instruir| S6[Objetivo - pasos]
+    O3 -->|Comparar| S7[Elementos - criterios]
+    S1 & S2 & S3 & S4 & S5 & S6 & S7 --> O4[Ordenar ideas según estructura] --> O5[Usar códigos para redactar] --> RetO([return])
+  end
+
+  subgraph Escribir [class Escribir]
+    M5 --> W1[Identificar objetivo] --> W2[analizarInformación] --> W3[ordenarTexto] --> W4[Establecer conexiones] --> W5[Redactar] --> W6[Texto final] --> RetW([return])
+  end
+
+  subgraph Investigar [class Investigar]
+    M6 --> I1[¿Qué es?] --> I2[¿Por qué es importante?] --> I3[¿Cómo funciona?] --> I4[¿Qué no se sabe?] --> I5[Recopilar información] --> I6[analizarInformación] --> I7[Conclusiones y respuestas] --> RetI([return])
+  end`;
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#0d1117',
+        primaryTextColor: '#e6edf3',
+        primaryBorderColor: '#00e5ff',
+        lineColor: '#00e5ff',
+        secondaryColor: '#161b22',
+        tertiaryColor: '#161b22'
+      }
+    });
+
+    const input = document.getElementById('mermaid-input');
+    const container = document.getElementById('canvas-container');
+    const viewport = document.getElementById('viewport');
+    let scale = 1, panX = 40, panY = 40, isDragging = false, startX = 0, startY = 0;
+
+    function updateTransform() {
+      container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      document.getElementById('zoom-badge').textContent = Math.round(scale * 100) + '%';
+    }
+
+    async function renderDiagram() {
+      try {
+        const { svg } = await mermaid.render('mermaid-svg-' + Date.now(), input.value);
+        container.innerHTML = svg;
+        const svgEl = container.querySelector('svg');
+        if (svgEl) {
+          svgEl.style.maxWidth = 'none';
+          svgEl.querySelectorAll('.node, .cluster').forEach(el => {
+            el.addEventListener('dblclick', (e) => {
+              e.stopPropagation();
+              zoomToElement(el);
+            });
+          });
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function zoomToElement(el) {
+      const rect = el.getBoundingClientRect();
+      const vpRect = viewport.getBoundingClientRect();
+      const targetScale = Math.min(25, Math.max(1.5, scale * (vpRect.width * 0.5) / Math.max(rect.width, 1)));
+      const factor = targetScale / scale;
+      const cx = rect.left - vpRect.left + rect.width / 2;
+      const cy = rect.top - vpRect.top + rect.height / 2;
+      panX = vpRect.width / 2 - (cx - panX) * factor;
+      panY = vpRect.height / 2 - (cy - panY) * factor;
+      scale = targetScale;
+      updateTransform();
+    }
+
+    function focusNode(keyword) {
+      const targets = Array.from(container.querySelectorAll('.cluster, .node'));
+      const found = targets.find(el => el.textContent.toLowerCase().includes(keyword.toLowerCase()));
+      if (found) zoomToElement(found);
+    }
+
+    function resetView() { scale = 0.5; panX = 30; panY = 30; updateTransform(); }
+    function zoomBy(factor) {
+      const vpRect = viewport.getBoundingClientRect();
+      const newScale = Math.min(25, Math.max(0.1, scale * factor));
+      const f = newScale / scale;
+      panX = vpRect.width / 2 - (vpRect.width / 2 - panX) * f;
+      panY = vpRect.height / 2 - (vpRect.height / 2 - panY) * f;
+      scale = newScale;
+      updateTransform();
+    }
+
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const vpRect = viewport.getBoundingClientRect();
+      const mx = e.clientX - vpRect.left;
+      const my = e.clientY - vpRect.top;
+      const factor = e.deltaY < 0 ? 1.25 : 0.8;
+      const newScale = Math.min(25, Math.max(0.1, scale * factor));
+      const f = newScale / scale;
+      panX = mx - (mx - panX) * f;
+      panY = my - (my - panY) * f;
+      scale = newScale;
+      updateTransform();
+    }, { passive: false });
+
+    viewport.addEventListener('mousedown', (e) => { isDragging = true; startX = e.clientX - panX; startY = e.clientY - panY; });
+    window.addEventListener('mousemove', (e) => { if (!isDragging) return; panX = e.clientX - startX; panY = e.clientY - startY; updateTransform(); });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    function toggleEditor() { document.getElementById('editor-panel').classList.toggle('open'); }
+
+    input.value = defaultCode;
+    renderDiagram().then(resetView);
+  </script>
+</body>
+</html>

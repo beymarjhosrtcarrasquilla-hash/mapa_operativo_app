@@ -2,1463 +2,851 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
-  <meta name="theme-color" content="#090d16" />
-  <title>Marco de Decisión — Sistema Maestro de Rutina y Diagnóstico</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marco de Decisión — Beymar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg: #090d16;
-      --surface: #111827;
-      --surface-2: #1a2234;
-      --border: #263248;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --cyan: #00e5ff;
-      --cyan-dim: rgba(0, 229, 255, 0.14);
-      --green: #10b981;
-      --green-dim: rgba(16, 185, 129, 0.14);
-      --amber: #f59e0b;
-      --amber-dim: rgba(245, 158, 11, 0.14);
-      --rose: #f43f5e;
-      --rose-dim: rgba(244, 63, 94, 0.14);
-      --violet: #818cf8;
-      --violet-dim: rgba(129, 140, 248, 0.14);
-      --radius: 14px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      line-height: 1.45;
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: #090d16;
+      color: #e2e8f0;
     }
-
-    /* TOPBAR */
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 50;
-      background: rgba(9, 13, 22, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    select, input {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+      color: #f8fafc;
+      transition: all 0.2s ease;
     }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-logo {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #00e5ff 0%, #818cf8 100%);
-      display: grid;
-      place-items: center;
-      font-weight: 900;
-      color: #06101c;
-      font-size: 16px;
-      letter-spacing: -0.5px;
-      box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
-    }
-
-    .brand h1 {
-      font-size: 1.08rem;
-      font-weight: 800;
-      letter-spacing: -0.2px;
-    }
-
-    .brand span {
-      display: block;
-      font-size: 0.74rem;
-      color: var(--muted);
-    }
-
-    .topbar-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .mode-switch {
-      display: inline-flex;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 3px;
-      gap: 4px;
-    }
-
-    .mode-btn {
-      border: none;
-      background: transparent;
-      color: var(--muted);
-      padding: 7px 14px;
-      border-radius: 7px;
-      font-size: 0.84rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.18s;
-    }
-
-    .mode-btn.active {
-      background: var(--cyan-dim);
-      color: var(--cyan);
-      box-shadow: inset 0 0 0 1px rgba(0, 229, 255, 0.35);
-    }
-
-    .btn-ghost {
-      background: var(--surface);
-      color: var(--text);
-      border: 1px solid var(--border);
-      padding: 7px 12px;
-      border-radius: 9px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
-
-    /* VIEWS */
-    .view { display: none; flex: 1; }
-    .view.active { display: flex; flex-direction: column; }
-
-    /* ACTION MODE LAYOUT */
-    .action-shell {
-      max-width: 1440px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 18px 20px 40px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    /* SMART COMMAND BAR */
-    .smart-bar {
-      background: linear-gradient(135deg, rgba(0, 229, 255, 0.08), rgba(129, 140, 248, 0.08));
-      border: 1px solid rgba(0, 229, 255, 0.3);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .smart-bar-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .smart-input {
-      flex: 1;
-      min-width: 240px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 11px 14px;
-      border-radius: 10px;
-      font-size: 0.92rem;
+    select:focus, input:focus {
       outline: none;
-      transition: border-color 0.15s;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
-
-    .smart-input:focus { border-color: var(--cyan); }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #00e5ff, #38bdf8);
-      color: #06101c;
-      border: none;
-      padding: 11px 18px;
-      border-radius: 10px;
-      font-weight: 800;
-      font-size: 0.88rem;
-      cursor: pointer;
-      transition: transform 0.12s, opacity 0.15s;
-      white-space: nowrap;
+    .tab-active {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: #ffffff;
+      border-color: #38bdf8;
     }
-
-    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
-    .btn-primary:disabled { opacity: 0.55; cursor: wait; transform: none; }
-
-    .smart-chips {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      align-items: center;
-      font-size: 0.76rem;
-      color: var(--muted);
-    }
-
-    .chip-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 0.74rem;
-      cursor: pointer;
-    }
-
-    .chip-btn:hover { color: var(--cyan); border-color: var(--cyan); }
-
-    /* 2-COLUMN WIDE GRID */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1.05fr 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    @media (max-width: 1024px) {
-      .two-col { grid-template-columns: 1fr; }
-    }
-
-    .col-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* CARDS */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px 18px;
-    }
-
-    .card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .card-title {
-      font-size: 0.96rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .badge {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    .badge.cyan { background: var(--cyan-dim); color: var(--cyan); border-color: rgba(0, 229, 255, 0.35); }
-    .badge.green { background: var(--green-dim); color: var(--green); border-color: rgba(16, 185, 129, 0.35); }
-    .badge.amber { background: var(--amber-dim); color: var(--amber); border-color: rgba(245, 158, 11, 0.35); }
-    .badge.rose { background: var(--rose-dim); color: var(--rose); border-color: rgba(244, 63, 94, 0.35); }
-    .badge.violet { background: var(--violet-dim); color: var(--violet); border-color: rgba(129, 140, 248, 0.35); }
-
-    /* PILL OPTIONS */
-    .option-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 8px;
-    }
-
-    .opt-btn {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 11px;
-      border-radius: 10px;
-      text-align: left;
-      cursor: pointer;
-      transition: 0.15s;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .opt-btn strong { font-size: 0.84rem; }
-    .opt-btn small { font-size: 0.72rem; color: var(--muted); }
-    .opt-btn:hover { border-color: var(--cyan); }
-    .opt-btn.selected {
-      background: var(--cyan-dim);
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.25);
-    }
-    .opt-btn.selected strong { color: var(--cyan); }
-
-    /* TIMER */
-    .timer-box {
-      margin-top: 12px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 11px;
-      padding: 11px 14px;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }
-
-    .timer-display {
-      font-family: 'JetBrains Mono', Consolas, monospace;
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: var(--cyan);
-      min-width: 72px;
-    }
-
-    .timer-controls {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .mini-btn {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 5px 10px;
-      border-radius: 7px;
-      font-size: 0.76rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .mini-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-    .mini-btn.active { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
-
-    /* CONTEXT STRIP (LEVEL 2) */
-    .context-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-    @media (max-width: 640px) {
-      .context-grid { grid-template-columns: 1fr; }
-    }
-
-    .field-label {
-      display: block;
-      font-size: 0.76rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      margin-bottom: 6px;
-    }
-
-    .seg-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .seg-btn {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    .seg-btn.selected {
-      background: var(--green-dim);
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    /* VERDICT BOX */
-    .verdict-card {
-      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--surface) 100%);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-    }
-
-    .verdict-headline {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-
-    .verdict-meta {
-      font-size: 0.82rem;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .verdict-steps {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      margin-top: 8px;
-    }
-
-    .verdict-steps li {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 8px 11px;
-      font-size: 0.84rem;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-    }
-
-    /* SOCIAL ROTATION */
-    .social-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .friend-row {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .friend-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .friend-name { font-weight: 700; font-size: 0.9rem; }
-    .friend-days {
-      font-family: Consolas, monospace;
-      font-weight: 700;
-      font-size: 0.82rem;
-    }
-
-    .btn-saw {
-      background: var(--green-dim);
-      border: 1px solid rgba(16, 185, 129, 0.45);
-      color: var(--green);
-      padding: 6px 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-saw:hover { background: var(--green); color: #05130d; }
-
-    /* MUSIC ROTATION */
-    .music-trio {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    @media (max-width: 560px) {
-      .music-trio { grid-template-columns: 1fr; }
-    }
-    .music-box {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-    }
-    .music-box small { display: block; color: var(--muted); font-size: 0.72rem; }
-    .music-box strong { display: block; font-size: 0.96rem; color: var(--violet); margin-top: 2px; }
-
-    /* PROTOCOL TABS */
-    .proto-tabs {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .proto-panel { display: none; }
-    .proto-panel.active { display: block; }
-
-    .check-list {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .check-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 9px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      padding: 9px 11px;
-      border-radius: 9px;
-      font-size: 0.84rem;
-      cursor: pointer;
-    }
-
-    .check-item input { margin-top: 3px; accent-color: var(--cyan); }
-    .check-item.done { opacity: 0.65; text-decoration: line-through; }
-
-    /* CANVAS 2D MAP VIEW */
-    .map-toolbar {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 14px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .map-stage {
-      position: relative;
-      flex: 1;
-      min-height: calc(100vh - 120px);
-      overflow: hidden;
-      background: #060911;
-    }
-
-    #mapCanvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      cursor: grab;
-      touch-action: none;
-    }
-    #mapCanvas:active { cursor: grabbing; }
-
-    .map-inspector {
-      position: absolute;
-      right: 16px;
-      bottom: 16px;
-      width: 310px;
-      max-width: calc(100% - 32px);
-      background: rgba(17, 24, 39, 0.94);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(0, 229, 255, 0.35);
-      border-radius: 12px;
-      padding: 13px 15px;
-      font-size: 0.83rem;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-    }
-
-    /* MODAL API KEY */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      place-items: center;
-      z-index: 100;
-      padding: 16px;
-    }
-    .modal-backdrop.open { display: grid; }
-    .modal-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      max-width: 440px;
-      width: 100%;
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    .card-glass {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      backdrop-filter: blur(12px);
     }
   </style>
 </head>
-<body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-logo">MD</div>
+<body class="min-h-screen flex flex-col">
+
+  <!-- HEADER OFICIAL -->
+  <header class="border-b border-slate-800 bg-slate-950/90 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h1>Marco de Decisión</h1>
-        <span>Sistema Maestro de Rutina y Diagnóstico — Beymar</span>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-block w-3 h-3 rounded-full bg-cyan-400 animate-pulse"></span>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">Marco de Decisión</h1>
+          <span class="text-xs mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">v2.5 · Cali</span>
+        </div>
+        <p class="text-xs text-slate-400 mt-0.5">Sistema Maestro de Rutina, Regulación Emocional, Presupuesto y Rotación Social — Beymar</p>
       </div>
-    </div>
-    <div class="topbar-controls">
-      <div class="mode-switch">
-        <button class="mode-btn active" id="btnModeAction" onclick="switchView('action')">Modo Acción</button>
-        <button class="mode-btn" id="btnModeMap" onclick="switchView('map')">Mapa 2D Completo</button>
+
+      <!-- INTERRUPTOR DE VISTA DUAL -->
+      <div class="flex items-center gap-2 bg-slate-900 p-1 rounded-xl border border-slate-800">
+        <button id="btn-view-action" onclick="switchView('action')" class="tab-active px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold border border-transparent transition">
+          ⚡ Modo Acción
+        </button>
+        <button id="btn-view-map" onclick="switchView('map')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white border border-transparent transition">
+          🗺️ Mapa 2D Completo
+        </button>
       </div>
-      <button class="btn-ghost" onclick="openApiModal()">⚙ Gemini API</button>
     </div>
   </header>
 
-  <!-- VISTA 1: MODO ACCIÓN (2 COLUMNAS AMPLIAS) -->
-  <main id="view-action" class="view active">
-    <div class="action-shell">
-      <!-- BARRA INTELIGENTE "NO SÉ QUÉ HACER" -->
-      <section class="smart-bar">
-        <div class="smart-bar-row">
-          <input
-            type="text"
-            id="smartInput"
-            class="smart-input"
-            placeholder="Cuéntame tu contexto libre (ej: 'estoy cansado, tengo 45 min en casa y $5.000') o presiona el botón..."
-            onkeydown="if(event.key==='Enter') runNoSeQueHacer()"
-          />
-          <button class="btn-primary" id="btnNoSeQueHacer" onclick="runNoSeQueHacer()">
-            ⚡ No sé qué hacer
-          </button>
-        </div>
-        <div class="smart-chips">
-          <span>Ejemplos:</span>
-          <button class="chip-btn" onclick="fillExample('Estoy saturado, tengo 30 min en casa y $0')">Saturado · 30m · $0</button>
-          <button class="chip-btn" onclick="fillExample('Energía alta, 2 horas libres, $15.000 en Cali para parchar o producir')">Energía alta · 2h · $15.000</button>
-          <button class="chip-btn" onclick="fillExample('Desmotivado en la tarde, quiero avanzar en música o ON RAD4R sin gastar')">Desmotivado · Música / ON RAD4R</button>
-          <span id="apiStatusPill" class="badge">Motor: Local (sin API Key)</span>
-        </div>
-      </section>
-
-      <!-- GRID 2 COLUMNAS AMPLIAS -->
-      <div class="two-col">
-        <!-- COLUMNA IZQUIERDA: EMBUDO JERÁRQUICO EN 2 NIVELES -->
-        <div class="col-stack">
-          <!-- NIVEL 1A: ¿CÓMO ESTÁS? -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">1. ¿Cómo estás? <span class="badge cyan">6 Estados</span></div>
-              <span class="badge" id="emotionBadge">Estable</span>
-            </div>
-            <div class="option-grid" id="emotionGrid"></div>
-
-            <!-- TEMPORIZADOR DE REGULACIÓN -->
-            <div class="timer-box">
-              <div>
-                <div style="font-size:0.75rem;color:var(--muted);font-weight:700;">TEMPORIZADOR DE REGULACIÓN</div>
-                <div class="timer-display" id="timerDisplay">05:00</div>
-              </div>
-              <div class="timer-controls">
-                <button class="mini-btn" onclick="setTimerMinutes(3)">3m</button>
-                <button class="mini-btn" onclick="setTimerMinutes(5)">5m</button>
-                <button class="mini-btn" onclick="setTimerMinutes(10)">10m</button>
-                <button class="mini-btn active" id="btnTimerToggle" onclick="toggleTimer()">Iniciar</button>
-                <button class="mini-btn" onclick="resetTimer()">Reiniciar</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- NIVEL 1B: ¿QUÉ HAY EN TU PANORAMA? -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">2. ¿Qué hay en tu panorama?</div>
-              <span class="badge violet" id="panoramaBadge">Estudio</span>
-            </div>
-            <div class="option-grid" id="panoramaGrid"></div>
-          </section>
-
-          <!-- NIVEL 2: FRANJA DE CONTEXTO -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">3. Franja de Contexto (Cali)</div>
-              <span class="badge green">Nivel 2</span>
-            </div>
-            <div class="context-grid">
-              <div>
-                <span class="field-label">Tiempo disponible</span>
-                <div class="seg-row" id="ctxTiempo"></div>
-              </div>
-              <div>
-                <span class="field-label">Presupuesto disponible (Cali)</span>
-                <div class="seg-row" id="ctxPresupuesto"></div>
-              </div>
-              <div>
-                <span class="field-label">Ubicación</span>
-                <div class="seg-row" id="ctxUbicacion"></div>
-              </div>
-              <div>
-                <span class="field-label">Momento / Día</span>
-                <div class="seg-row" id="ctxMomento"></div>
-              </div>
-            </div>
-          </section>
+  <!-- EMBUDO JERÁRQUICO EN 2 NIVELES -->
+  <section class="border-b border-slate-800/80 bg-slate-900/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 space-y-4">
+      <!-- NIVEL 1: PREGUNTAS PRINCIPALES -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-1.5">1. ¿Cómo estás ahora?</label>
+          <select id="sel-emotion" onchange="updateSystem()" class="w-full rounded-xl px-3.5 py-2.5 text-sm font-medium">
+            <option value="estable">🟢 Estable / Enfocado (Listo para operar)</option>
+            <option value="ansioso">🟡 Ansioso / Pensando mucho</option>
+            <option value="triste">🔵 Triste / Bajoneado</option>
+            <option value="enojado">🔴 Enojado / Con ira</option>
+            <option value="bloqueado">🟣 Bloqueado / Saturado</option>
+            <option value="cansado">⚪ Cansado / Agotado físico o mental</option>
+          </select>
         </div>
 
-        <!-- COLUMNA DERECHA: VEREDICTO, ROTACIÓN SOCIAL, MÚSICA Y PROTOCOLOS -->
-        <div class="col-stack">
-          <!-- VEREDICTO EJECUTIVO -->
-          <section class="card verdict-card">
-            <div class="card-head">
-              <div class="card-title">🎯 Veredicto Ejecutivo</div>
-              <span class="badge green" id="verdictSource">Actualizado</span>
-            </div>
-            <div class="verdict-headline" id="verdictTitle">Cargando diagnóstico...</div>
-            <div class="verdict-meta" id="verdictMeta"></div>
-            <ul class="verdict-steps" id="verdictSteps"></ul>
-          </section>
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-cyan-400 mb-1.5">2. ¿Qué hay en tu panorama?</label>
+          <select id="sel-panorama" onchange="onPanoramaChange()" class="w-full rounded-xl px-3.5 py-2.5 text-sm font-medium">
+            <option value="estudio">📚 Estudio / Universidad (IU Antonio José Camacho)</option>
+            <option value="trabajo_rad4r">👕 ON RAD4R / Marca & Estampado</option>
+            <option value="trabajo_domi">🏍️ Trabajo / Domicilios GN 125 / Soporte</option>
+            <option value="musica">🎹 Música / Producción (FL Studio) / Rap</option>
+            <option value="amigos">🤝 Salir con Amigos / Rotación Social</option>
+            <option value="deporte">🏀 Deporte / Calistenia / Natación</option>
+            <option value="libre">🧭 Tiempo Libre / Explorar qué hacer</option>
+          </select>
+        </div>
 
-          <!-- MOTOR DE ROTACIÓN SOCIAL -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">👥 Motor de Rotación Social</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-                <select id="socialFilter" class="mini-btn" onchange="renderSocial()">
-                  <option value="all">Todos (7)</option>
-                  <option value="Parche diario">Parche diario</option>
-                  <option value="Cercano/Semanal">Cercano / Semanal</option>
-                  <option value="Ocasional/Reconexión">Ocasional / Reconexión</option>
-                </select>
-              </div>
-            </div>
-            <div class="social-list" id="socialList"></div>
-          </section>
-
-          <!-- ROTACIÓN DOBLE MUSICAL -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">🎸 Rotación Doble Musical</div>
-              <div style="display:flex;gap:6px;">
-                <button class="mini-btn" onclick="rotateMusic()">↻ Rotar</button>
-                <button class="mini-btn active" onclick="logMusicSession()">✓ Practicado</button>
-              </div>
-            </div>
-            <div class="music-trio">
-              <div class="music-box">
-                <small>Instrumento</small>
-                <strong id="musicInstrument">Guitarra</strong>
-              </div>
-              <div class="music-box">
-                <small>Escala</small>
-                <strong id="musicScale">Pentatónica Menor</strong>
-              </div>
-              <div class="music-box">
-                <small>Tonalidad</small>
-                <strong id="musicKey">Am / C</strong>
-              </div>
-            </div>
-            <div style="margin-top:8px;font-size:0.76rem;color:var(--muted);" id="musicStats">
-              Sesiones registradas: 0
-            </div>
-          </section>
-
-          <!-- PROTOCOLOS (ESTUDIO, ON RAD4R, DEPORTES, CIERRE UNIFICADO) -->
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">📋 Protocolos Operativos</div>
-              <button class="mini-btn" onclick="resetCurrentProtocol()">Reiniciar checks</button>
-            </div>
-            <div class="proto-tabs" id="protoTabs">
-              <button class="mini-btn active" onclick="selectProto('estudio', this)">Estudio (6 pasos)</button>
-              <button class="mini-btn" onclick="selectProto('onrad4r', this)">ON RAD4R</button>
-              <button class="mini-btn" onclick="selectProto('deportes', this)">Deportes</button>
-              <button class="mini-btn" onclick="selectProto('cierre', this)">Cierre Unificado</button>
-            </div>
-            <div id="protoContent"></div>
-          </section>
+        <div id="subpanorama-wrapper">
+          <label id="lbl-subpanorama" class="block text-xs font-bold uppercase tracking-wider text-indigo-400 mb-1.5">Sub-enfoque</label>
+          <select id="sel-subpanorama" onchange="updateSystem()" class="w-full rounded-xl px-3.5 py-2.5 text-sm font-medium"></select>
         </div>
       </div>
-    </div>
-  </main>
 
-  <!-- VISTA 2: MAPA 2D COMPLETO EN HTML5 CANVAS 2D A 60 FPS -->
-  <section id="view-map" class="view">
-    <div class="map-toolbar">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="mapFocusButtons"></div>
-      <div style="display:flex;gap:6px;align-items:center;">
-        <button class="mini-btn" onclick="mapZoom(0.8)">-</button>
-        <span id="mapZoomLabel" style="font-size:0.78rem;color:var(--muted);min-width:46px;text-align:center;">100%</span>
-        <button class="mini-btn" onclick="mapZoom(1.25)">+</button>
-        <button class="mini-btn" onclick="resetMapCamera()">Centrar</button>
-      </div>
-    </div>
-    <div class="map-stage">
-      <canvas id="mapCanvas"></canvas>
-      <div class="map-inspector" id="mapInspector">
-        <strong style="color:var(--cyan);display:block;margin-bottom:4px;">Mapa 2D — 60 FPS</strong>
-        <p style="color:var(--muted);font-size:0.78rem;">
-          Arrastra para moverte, usa la rueda para zoom o haz clic en cualquier nodo para inspeccionarlo. Los nodos resaltados reflejan tu estado actual en Modo Acción.
-        </p>
+      <!-- NIVEL 2: FRANJA DE CONTEXTO CALIBRADA -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-2 border-t border-slate-800/70">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">⏱️ Tiempo disponible</label>
+          <select id="sel-time" onchange="updateSystem()" class="w-full rounded-lg px-3 py-2 text-xs font-medium">
+            <option value="corto">&lt; 30 min (Bloque rápido)</option>
+            <option value="medio" selected>30 - 60 min (Sesión estándar)</option>
+            <option value="largo">1 - 2 horas (Bloque profundo)</option>
+            <option value="libre">+2 horas / Tarde o noche libre</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">💵 Presupuesto (Cali)</label>
+          <select id="sel-budget" onchange="updateSystem()" class="w-full rounded-lg px-3 py-2 text-xs font-medium">
+            <option value="0">$0 — Nada (Río Cali / Casa / Tanque)</option>
+            <option value="1" selected>$5.000 - $10.000 — Parche barato (Km 18 + pan / Billar)</option>
+            <option value="2">$15.000 — Salchipapa / Combo / Billar + consumo</option>
+            <option value="3">Flexible — Cine / Restaurante / Roce lejano en moto</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">📍 Ubicación actual</label>
+          <select id="sel-location" onchange="updateSystem()" class="w-full rounded-lg px-3 py-2 text-xs font-medium">
+            <option value="casa" selected>Casa (Siloé / La Estrella — PC + Piano)</option>
+            <option value="calle">En la calle / Con la Suzuki GN 125</option>
+            <option value="u">Universidad (IU Antonio José Camacho)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-400 mb-1">🌤️ Momento / Día</label>
+          <select id="sel-moment" onchange="updateSystem()" class="w-full rounded-lg px-3 py-2 text-xs font-medium">
+            <option value="semana_dia">Entre semana · Día</option>
+            <option value="semana_noche" selected>Entre semana · Noche</option>
+            <option value="finde_dia">Fin de semana · Día</option>
+            <option value="finde_noche">Fin de semana · Noche</option>
+          </select>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- MODAL GEMINI API KEY -->
-  <div class="modal-backdrop" id="apiModal">
-    <div class="modal-box">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <strong>Configurar Gemini API Key</strong>
-        <button class="mini-btn" onclick="closeApiModal()">✕</button>
+  <!-- VISTA 1: MODO ACCIÓN (AMPLIO EN 2 COLUMNAS) -->
+  <main id="view-action" class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- BARRA DE COMANDO INTELIGENTE: "NO SÉ QUÉ HACER" -->
+    <div class="card-glass rounded-2xl p-4 sm:p-5 border border-cyan-500/30 shadow-lg shadow-cyan-950/20">
+      <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+        <button onclick="triggerNoSeQueHacer()" class="px-5 py-3 rounded-xl font-extrabold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-md transition shrink-0 flex items-center justify-center gap-2">
+          <span>🧠</span>
+          <span>No sé qué hacer</span>
+        </button>
+        <input id="inp-natural-context" type="text" placeholder="Ej: Salí cansado de la U, tengo 10k y quiero despejarme... (o dale directo al botón)" class="flex-1 rounded-xl px-4 py-3 text-sm" onkeydown="if(event.key==='Enter') triggerNoSeQueHacer()" />
       </div>
-      <p style="font-size:0.82rem;color:var(--muted);">
-        Tu clave se guarda únicamente en el navegador (<code>localStorage</code>) para alimentar el comando <strong>"No sé qué hacer"</strong> con <code>gemini-2.5-flash</code>.
-      </p>
-      <input type="password" id="apiKeyInput" class="smart-input" placeholder="AIza..." />
-      <div style="display:flex;justify-content:flex-end;gap:8px;">
-        <button class="mini-btn" onclick="clearApiKey()">Borrar clave</button>
-        <button class="btn-primary" style="padding:8px 14px;" onclick="saveApiKey()">Guardar</button>
+      <div id="ai-command-output" class="hidden mt-3 p-3.5 rounded-xl bg-slate-950/90 border border-cyan-800/60 text-sm text-cyan-100 leading-relaxed"></div>
+    </div>
+
+    <!-- GRID PRINCIPAL 2 COLUMNAS -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- COLUMNA IZQUIERDA (7 cols): VEREDICTO EJECUTIVO Y PROTOCOLO -->
+      <div class="lg:col-span-7 space-y-6">
+        <div class="card-glass rounded-2xl p-6 space-y-5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div>
+              <span id="badge-route" class="text-[11px] mono uppercase tracking-wider px-2.5 py-1 rounded-md bg-cyan-950 text-cyan-300 border border-cyan-800">RUTA ACTIVA</span>
+              <h2 id="verdict-title" class="text-xl sm:text-2xl font-bold text-white mt-2">Cargando veredicto...</h2>
+            </div>
+          </div>
+
+          <p id="verdict-desc" class="text-slate-300 text-sm sm:text-base leading-relaxed"></p>
+
+          <!-- HERRAMIENTAS EXACTAS -->
+          <div id="tools-box" class="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">🛠️ Stack / Herramientas Exactas</h3>
+            <div id="tools-list" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- PASOS ACCIONABLES -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">📋 Pasos a Ejecutar</h3>
+            <ol id="steps-list" class="space-y-2.5 text-sm text-slate-200"></ol>
+          </div>
+
+          <!-- CIERRE UNIFICADO -->
+          <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <span class="text-xs text-slate-400">Cierre obligatorio: registrar avance en Google Tasks / Bitácora.</span>
+            <button onclick="markSessionDone()" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition">
+              ✓ Registrar Bloque Completado (<span id="session-counter">0</span>)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA (5 cols): MÓDULO CONTEXTUAL DINÁMICO -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- MÓDULO A: REGULACIÓN EMOCIONAL + TEMPORIZADOR -->
+        <div id="mod-emotion" class="hidden card-glass rounded-2xl p-6 border border-amber-500/40 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-amber-300">⏳ Temporizador de Regulación</h3>
+            <span class="text-xs mono text-slate-400">Prioridad 1</span>
+          </div>
+          <p id="emotion-guide" class="text-xs text-slate-300 leading-relaxed"></p>
+          <div class="text-center py-4 bg-slate-950 rounded-xl border border-slate-800">
+            <div id="timer-display" class="text-4xl font-extrabold mono text-white">15:00</div>
+            <div class="flex justify-center gap-2 mt-4">
+              <button onclick="startTimer(10)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700">10 min</button>
+              <button onclick="startTimer(15)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 text-white hover:bg-cyan-500">15 min</button>
+              <button onclick="startTimer(20)" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700">20 min</button>
+              <button onclick="stopTimer()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-950 text-rose-300 border border-rose-800">Pausar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MÓDULO B: PLANES COMPATIBLES CON PRESUPUESTO (CALI) -->
+        <div id="mod-budget" class="card-glass rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-emerald-300">💸 Planes Compatibles (Cali)</h3>
+            <span id="budget-badge" class="text-xs mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">$5k - $10k</span>
+          </div>
+          <ul id="budget-plans-list" class="space-y-2 text-xs sm:text-sm"></ul>
+        </div>
+
+        <!-- MÓDULO C: ROTACIÓN SOCIAL Y AMIGOS -->
+        <div id="mod-social" class="card-glass rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-sky-300">🤝 Rotación Social</h3>
+            <span class="text-[11px] text-slate-400">Ordenado por urgencia</span>
+          </div>
+          <div id="social-alert" class="p-3 rounded-xl bg-sky-950/60 border border-sky-800 text-xs text-sky-200"></div>
+          <div id="friends-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+          <div class="pt-2 border-t border-slate-800 flex gap-2">
+            <input id="new-friend-name" type="text" placeholder="Nuevo amigo..." class="flex-1 rounded-lg px-3 py-1.5 text-xs" />
+            <select id="new-friend-tier" class="rounded-lg px-2 py-1.5 text-xs">
+              <option value="diario">Diario</option>
+              <option value="semanal" selected>Semanal</option>
+              <option value="ocasional">Ocasional</option>
+            </select>
+            <button onclick="addFriend()" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-sky-600 text-white hover:bg-sky-500">+</button>
+          </div>
+        </div>
+
+        <!-- MÓDULO D: ROTACIÓN DOBLE MUSICAL -->
+        <div id="mod-music" class="hidden card-glass rounded-2xl p-6 space-y-4 border border-purple-500/40">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-purple-300">🎹 Rotación Doble Musical</h3>
+            <button onclick="rotateMusic()" class="px-3 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white hover:bg-purple-500">Rotar Ahora ↻</button>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="block text-[10px] text-slate-400 uppercase">Instrumento</span>
+              <strong id="music-inst" class="text-xs sm:text-sm text-white mt-1 block">Piano PSR-275</strong>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="block text-[10px] text-slate-400 uppercase">Escala</span>
+              <strong id="music-scale" class="text-xs sm:text-sm text-purple-300 mt-1 block">Menor Armónica</strong>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+              <span class="block text-[10px] text-slate-400 uppercase">Tonalidad</span>
+              <strong id="music-key" class="text-xs sm:text-sm text-cyan-300 mt-1 block">Do# / Re♭</strong>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
+  </main>
+
+  <!-- VISTA 2: MAPA 2D COMPLETO (HTML5 CANVAS A 60 FPS) -->
+  <section id="view-map" class="hidden flex-1 flex flex-col relative bg-slate-950">
+    <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-cyan-400">Flujograma Operativo 2D</span>
+        <span class="text-slate-400 hidden sm:inline">· Arrastra para mover · Rueda para zoom · La ruta activa brilla en tiempo real</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="resetCanvasCamera()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200">Centrar Mapa</button>
+      </div>
+    </div>
+    <div class="flex-1 relative overflow-hidden" style="min-height: 620px;">
+      <canvas id="flow-canvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+    </div>
+  </section>
 
   <script>
-    // ========================
-    // DATOS MAESTROS
-    // ========================
-    const EMOTIONS = [
-      { id: 'enfocado', label: 'Energía Alta', desc: 'Listo para reto profundo', color: '#10b981', timerMin: 0 },
-      { id: 'estable', label: 'Tranquilo / Estable', desc: 'Ritmo constante y claro', color: '#00e5ff', timerMin: 3 },
-      { id: 'cansado', label: 'Cansado / Agotado', desc: 'Baja carga cognitiva', color: '#f59e0b', timerMin: 5 },
-      { id: 'ansioso', label: 'Ansioso / Saturado', desc: 'Regular antes de actuar', color: '#f43f5e', timerMin: 5 },
-      { id: 'bloqueado', label: 'Desmotivado / Bloqueado', desc: 'Micro-paso de 5 min', color: '#818cf8', timerMin: 3 },
-      { id: 'inquieto', label: 'Social / Inquieto', desc: 'Necesita movimiento o parche', color: '#38bdf8', timerMin: 3 }
-    ];
-
-    const PANORAMAS = [
-      { id: 'trabajo', label: 'Ganar Dinero', desc: 'YouTube, Servicio técnico, Motorratón/Rappi' },
-      { id: 'estudio', label: 'Estudio', desc: 'Analizar, Repasar, Entender, Escribir' },
-      { id: 'onrad4r', label: 'ON RAD4R', desc: 'Estampado, marca y demanda' },
-      { id: 'musica', label: 'Música', desc: 'Rotación doble + clases' },
-      { id: 'social', label: 'Social / Parche', desc: 'Rotación de amigos en Cali' },
-      { id: 'deportes', label: 'Deportes', desc: 'Activación física y salud' },
-      { id: 'personal', label: 'Orden / Personal', desc: 'Espacio, finanzas y claridad' },
-      { id: 'cierre', label: 'Cierre del Día', desc: 'Protocolo de cierre unificado' }
-    ];
-
-    const CONTEXT_OPTIONS = {
-      tiempo: ['15 min', '30 min', '1 hora', '2+ horas'],
-      presupuesto: ['$0', '$5.000 - $10.000', '$15.000', 'Inversión / Flexible'],
-      ubicacion: ['Casa', 'Calle / Cali', 'Universidad', 'En ruta'],
-      momento: ['Mañana', 'Tarde', 'Noche', 'Fin de semana']
+    // ESTADO GLOBAL
+    const STATE = {
+      view: 'action',
+      sessions: parseInt(localStorage.getItem('md_sessions') || '0', 10),
+      friends: JSON.parse(localStorage.getItem('md_friends') || 'null') || [
+        { name: 'Aleja', tier: 'diario', days: 2 },
+        { name: 'Cris', tier: 'diario', days: 3 },
+        { name: 'Majito', tier: 'semanal', days: 7 },
+        { name: 'Xiomara', tier: 'semanal', days: 11 },
+        { name: 'Majo', tier: 'semanal', days: 6 },
+        { name: 'Jack', tier: 'ocasional', days: 16 },
+        { name: 'Killian', tier: 'ocasional', days: 21 }
+      ],
+      musicIdx: parseInt(localStorage.getItem('md_music_idx') || '0', 10),
+      activeRouteNodes: ['inicio', 'emocion', 'panorama', 'contexto', 'accion']
     };
 
-    const DEFAULT_FRIENDS = [
-      { name: 'Aleja', tier: 'Parche diario', lastSeenDays: 1 },
-      { name: 'Cris', tier: 'Parche diario', lastSeenDays: 3 },
-      { name: 'Majito', tier: 'Cercano/Semanal', lastSeenDays: 6 },
-      { name: 'Xiomara', tier: 'Cercano/Semanal', lastSeenDays: 9 },
-      { name: 'Majo', tier: 'Cercano/Semanal', lastSeenDays: 12 },
-      { name: 'Jack', tier: 'Ocasional/Reconexión', lastSeenDays: 18 },
-      { name: 'Killian', tier: 'Ocasional/Reconexión', lastSeenDays: 25 }
-    ];
-
-    const MUSIC_INSTRUMENTS = ['Guitarra', 'Piano / Teclado', 'Voz / Canto', 'Bajo / Producción'];
-    const MUSIC_SCALES = ['Pentatónica Menor', 'Mayor Natural', 'Menor Natural', 'Dórica', 'Mixolidia', 'Blues', 'Armónica Menor'];
-    const MUSIC_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-
-    const PROTOCOLS = {
+    const SUB_OPTIONS = {
       estudio: [
-        '1. AnalizarInforma: Leer y resaltar (Verde: Definición, Azul: Secundaria, Amarillo: Proceso, Naranja: Conclusión).',
-        '2. Códigos de relación: D (Define), EX (Explica), AP (Apoya), EJ (Ejemplifica), RF (Refuta), CA (Causa), SO (Solución), PR (Proceso), CN (Concluye).',
-        '3. Método Repasar: Generar flashcards (IA / Anki) y aplicar repaso espaciado.',
-        '4. Entendimiento: Detectar qué falta (información vs comprensión) y practicar.',
-        '5. OrdenarTexto: Elegir estructura (Explicar, Argumentar, Informar, Narrar, Comparar).',
-        '6. Escribir / Investigar: Redactar con conexiones claras y cerrar conclusiones.'
+        { val: 'prog', label: 'Programación (Java / NetBeans / Geany)' },
+        { val: 'math', label: 'Cálculo Integral / Física I (StarNote + GeoGebra)' },
+        { val: 'redactar', label: 'Redacción / Informes (Google Docs)' },
+        { val: 'repaso', label: 'Repaso Activo / Flashcards (Anki / Flashka)' },
+        { val: 'investigacion', label: 'Investigación / Presentación' }
       ],
-      onrad4r: [
-        '1. Investigar mercado y referencias actuales de streetwear / estampado.',
-        '2. Validar demanda real (encuestas, tendencias, pedidos previos).',
-        '3. Evaluar costos de producción, insumos y margen neto.',
-        '4. Definir producto, diseño gráfico y estética de colección.',
-        '5. Crear pieza de contenido / publicación y medir respuesta.'
+      trabajo_rad4r: [
+        { val: 'diseno', label: 'Diseño DTF / Mockups (Photopea / Canva)' },
+        { val: 'radar', label: 'Delegar / Automatizar con Radar (@Rad4r2076_bot)' },
+        { val: 'estampado', label: 'Producción / Plancha térmica y prendas' }
       ],
-      deportes: [
-        '1. Movilidad articular de 5 minutos (cuello, hombros, cadera, tobillos).',
-        '2. Bloque principal según presupuesto: Casa ($0 calistenia) / Parque (trote o barras) / Cancha o Gym.',
-        '3. Hidratación y 3 minutos de estiramiento + respiración nasal al terminar.'
+      trabajo_domi: [
+        { val: 'domicilios', label: 'Turnos Domicilios / Encomiendas GN 125' },
+        { val: 'soporte', label: 'Soporte Técnico / Mantenimiento PC' }
       ],
-      cierre: [
-        '1. Registrar avance real del día (Estudio, Trabajo, Música o Social).',
-        '2. Cerrar pendientes abiertos o anotar el primer paso exacto de mañana.',
-        '3. Ordenar escritorio / mochila y preparar ropa o herramientas.',
-        '4. Desconexión de pantallas 30 min antes de dormir.'
+      musica: [
+        { val: 'prod', label: 'Producción de Beats (FL Studio / BandLab)' },
+        { val: 'practica', label: 'Práctica de Instrumento + Escalas' },
+        { val: 'rap', label: 'Composición / Freestyle / Beatbox' }
+      ],
+      amigos: [
+        { val: 'rotacion', label: 'Elegir a quién ver hoy (Rotación inteligente)' },
+        { val: 'parche_moto', label: 'Rodada / Mirador Km 18 / Cristo Rey' },
+        { val: 'parche_mesa', label: 'Juegos de mesa / Billar / Comida' }
+      ],
+      deporte: [
+        { val: 'calistenia', label: 'Calistenia & Fuerza (Lun/Mar/Jue/Vie)' },
+        { val: 'basquet', label: 'Básquetbol (Entre semana o noche)' },
+        { val: 'natacion', label: 'Natación (Fin de semana de día)' }
+      ],
+      libre: [
+        { val: 'explorar', label: 'Sugerencia automática según hora y plata' },
+        { val: 'lectura', label: 'Lectura (Borges / Cialdini / Bhagavad Gita)' },
+        { val: 'moto_taller', label: 'Mantenimiento / Lavado Suzuki GN 125' }
       ]
     };
 
-    // ========================
-    // ESTADO PERSISTENTE
-    // ========================
-    const STORAGE_KEY = 'marco_decision_state_v1';
-    let state = loadState();
+    const BUDGET_DATA = {
+      '0': {
+        badge: '$0 — Costo Cero',
+        plans: [
+          { ok: true, text: 'Parche en Río Cali / El Gato del Río / Parque de las Banderas' },
+          { ok: true, text: 'Juegos de mesa en casa (Parqués, Uno, cartas) con amigos' },
+          { ok: true, text: 'Rodar corto por Siloé / Bellavista con la gasolina del tanque' },
+          { ok: false, text: 'Salchipapa, billar con consumo o cine (bloqueado por presupuesto $0)' }
+        ]
+      },
+      '1': {
+        badge: '$5.000 - $10.000',
+        plans: [
+          { ok: true, text: 'Subir al Km 18 y bajar en la Suzuki GN 125 + comprar pan caliente' },
+          { ok: true, text: 'Partidas de billar en barrio (mesa ~$500/partida sin consumo pesado)' },
+          { ok: true, text: 'Mecato básico / empanadas con avena en combo corto' },
+          { ok: false, text: 'Salchipapa grande, cine o roce lejano (requiere $15k+)' }
+        ]
+      },
+      '2': {
+        badge: '$15.000 pesos',
+        plans: [
+          { ok: true, text: 'Salchipapa completa o combo de comida rápida en Cali' },
+          { ok: true, text: 'Tarde/noche de billar con algo de tomar o picar' },
+          { ok: true, text: 'Subida al Km 18 con bebida caliente y comida' },
+          { ok: false, text: 'Cine + cena completa o viaje largo intermunicipal' }
+        ]
+      },
+      '3': {
+        badge: 'Inversión / Flexible',
+        plans: [
+          { ok: true, text: 'Cine + comida después de la función' },
+          { ok: true, text: 'Roce lejano en la Suzuki GN 125 (Jamundí / Kilómetro 30 / Palmira)' },
+          { ok: true, text: 'Restaurante o salida completa sin restricción de caja' },
+          { ok: true, text: 'Inversión en insumos ON RAD4R o repuestos moto' }
+        ]
+      }
+    };
 
-    function loadState() {
-      const base = {
-        emotion: 'estable',
-        panorama: 'estudio',
-        context: {
-          tiempo: '1 hora',
-          presupuesto: '$0',
-          ubicacion: 'Casa',
-          momento: 'Tarde'
-        },
-        friends: DEFAULT_FRIENDS.map(f => ({
-          ...f,
-          lastSeenIso: new Date(Date.now() - f.lastSeenDays * 86400000).toISOString().slice(0, 10)
-        })),
-        music: {
-          instIdx: 0,
-          scaleIdx: 0,
-          keyIdx: 9,
-          sessions: 0
-        },
-        protocolChecks: {},
-        activeProto: 'estudio',
-        geminiKey: localStorage.getItem('marco_gemini_api_key') || '',
-        customVerdict: null
-      };
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return base;
-        const parsed = JSON.parse(raw);
-        return {
-          ...base,
-          ...parsed,
-          context: { ...base.context, ...(parsed.context || {}) },
-          music: { ...base.music, ...(parsed.music || {}) },
-          friends: Array.isArray(parsed.friends) && parsed.friends.length ? parsed.friends : base.friends
+    const MUSIC_ROTATION = [
+      { inst: 'Piano (Yamaha PSR-275)', scale: 'Menor Armónica', key: 'La Menor / Fa#m' },
+      { inst: 'Bajo 5 Cuerdas', scale: 'Pentatónica Menor + Blues', key: 'Mi Menor / Si Menor' },
+      { inst: 'Batería Acústica / App', scale: 'Groove Boom Bap / Corrido', key: '92 BPM · 3/4 y 4/4' },
+      { inst: 'Piano (Yamaha PSR-275)', scale: 'Dórica / Improvisación', key: 'Re Menor / Sol Menor' },
+      { inst: 'Ukulele / Voz', scale: 'Mayor Natural + Séptimas', key: 'Do Mayor / Sol Mayor' }
+    ];
+
+    function onPanoramaChange() {
+      const p = document.getElementById('sel-panorama').value;
+      const sub = document.getElementById('sel-subpanorama');
+      sub.innerHTML = '';
+      (SUB_OPTIONS[p] || []).forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt.val;
+        o.textContent = opt.label;
+        sub.appendChild(o);
+      });
+      updateSystem();
+    }
+
+    function updateSystem() {
+      const emo = document.getElementById('sel-emotion').value;
+      const pan = document.getElementById('sel-panorama').value;
+      const sub = document.getElementById('sel-subpanorama').value;
+      const time = document.getElementById('sel-time').value;
+      const budget = document.getElementById('sel-budget').value;
+      const loc = document.getElementById('sel-location').value;
+      const moment = document.getElementById('sel-moment').value;
+
+      document.getElementById('session-counter').textContent = STATE.sessions;
+
+      const modEmo = document.getElementById('mod-emotion');
+      const modMusic = document.getElementById('mod-music');
+      const titleEl = document.getElementById('verdict-title');
+      const descEl = document.getElementById('verdict-desc');
+      const badgeEl = document.getElementById('badge-route');
+      const toolsEl = document.getElementById('tools-list');
+      const stepsEl = document.getElementById('steps-list');
+
+      // Render presupuesto & amigos siempre actualizados
+      renderBudget(budget);
+      renderFriends();
+
+      // 1. FILTRO EMOCIONAL (PRIORIDAD ABSOLUTA)
+      if (emo !== 'estable') {
+        modEmo.classList.remove('hidden');
+        modMusic.classList.toggle('hidden', emo !== 'triste');
+        STATE.activeRouteNodes = ['inicio', 'emocion', 'regulacion', 'cierre'];
+
+        const emoMap = {
+          ansioso: {
+            badge: 'REGULACIÓN · ANSIEDAD',
+            title: 'Descarga mental en Bitácora (15 min sin pantallas)',
+            desc: 'Cuando la cabeza va a mil, forzar productividad empeora el ruido. Escribe todo lo que tienes dando vueltas en tu bitácora o Google Docs para sacarlo de la memoria RAM.',
+            guide: 'Pon el temporizador en 15 minutos. Escribe sin filtrar ni corregir.',
+            tools: ['Google Docs (Bitácora)', 'Cuaderno físico', 'Modo No Molestar'],
+            steps: [
+              'Activa el temporizador de 15 minutos aquí a la derecha.',
+              'Anota qué te tiene ansioso y separa lo que controlas hoy de lo que no.',
+              'Al sonar el tiempo, elige UNA sola micro-tarea de 20 minutos.'
+            ]
+          },
+          triste: {
+            badge: 'REGULACIÓN · ESTADO BAJO',
+            title: 'Catarsis musical o rodar suave en la GN 125',
+            desc: 'No te exijas rendimiento pesado hoy. Canaliza el estado tocando piano/bajo libre o saliendo a rodar tranquilo hacia Cristo Rey / Vía al Mar.',
+            guide: 'Toca sin partitura ni metrónomo durante 15 minutos, o da una vuelta corta.',
+            tools: ['Yamaha PSR-275', 'Bajo 5 cuerdas', 'Suzuki GN 125'],
+            steps: [
+              'Si estás en casa, prende el teclado o agarra el bajo y toca progresiones menores.',
+              'Si necesitas aire, sal a rodar suave 20 minutos con casco bien puesto.',
+              'Registra cómo te sientes en Daylio al terminar.'
+            ]
+          },
+          enojado: {
+            badge: 'REGULACIÓN · DESCARGA FÍSICA',
+            title: 'Calistenia explosiva: Dominadas y fondos hasta bajar pulsaciones',
+            desc: 'La ira es energía acumulada. Quémala físicamente antes de hablar con alguien o tomar decisiones.',
+            guide: 'Haz 4 series al fallo controlado con descansos de 90 segundos.',
+            tools: ['Barra de dominadas', 'Cronómetro 10 min', 'Agua fría'],
+            steps: [
+              'Inicia el temporizador de 10 minutos.',
+              'Ejecuta dominadas explosivas + flexiones diamantadas.',
+              'Ducha rápida y retoma el panorama con cabeza fría.'
+            ]
+          },
+          bloqueado: {
+            badge: 'REGULACIÓN · DESBLOQUEO COGNITIVO',
+            title: 'Cambio de contexto: 15 min de lectura enfocada',
+            desc: 'Seguir mirando la pantalla bloqueado solo quema tiempo. Cambia de estímulo con lectura corta.',
+            guide: 'Lee 5 páginas sin tocar el celular.',
+            tools: ['Ficciones (Borges)', 'Influencia (Cialdini)', 'Bhagavad Gita'],
+            steps: [
+              'Aléjate del PC durante 15 minutos exactos.',
+              'Lee un cuento corto o capítulo breve subrayando una idea.',
+              'Vuelve y divide la tarea en un paso de 10 minutos.'
+            ]
+          },
+          cansado: {
+            badge: 'REGULACIÓN · RECUPERACIÓN REAL',
+            title: 'Descanso sin culpa (Siesta de 20 min o cierre del día)',
+            desc: 'Trabajar agotado produce errores que mañana toca rehacer. Descansa de verdad.',
+            guide: '20 minutos de descanso total sin scroll en redes.',
+            tools: ['Alarma 20 min', 'Hidratación', 'Cama / Sillón'],
+            steps: [
+              'Pon alarma de 20 minutos (o apaga pantallas si ya es de noche).',
+              'Toma un vaso de agua antes de acostarte.',
+              'Mañana arrancas fresco con el bloque de estudio.'
+            ]
+          }
         };
-      } catch {
-        return base;
+
+        const cfg = emoMap[emo];
+        badgeEl.textContent = cfg.badge;
+        titleEl.textContent = cfg.title;
+        descEl.textContent = cfg.desc;
+        document.getElementById('emotion-guide').textContent = cfg.guide;
+        renderToolsAndSteps(cfg.tools, cfg.steps);
+        return;
       }
-    }
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+      // ESTADO ESTABLE -> OCULTAR REGULACIÓN EMOCIONAL
+      modEmo.classList.add('hidden');
+      modMusic.classList.toggle('hidden', pan !== 'musica');
+      STATE.activeRouteNodes = ['inicio', 'emocion', 'panorama', 'contexto', 'accion', 'cierre'];
 
-    // ========================
-    // RENDER MODO ACCIÓN
-    // ========================
-    function renderEmotions() {
-      const grid = document.getElementById('emotionGrid');
-      grid.innerHTML = EMOTIONS.map(e => `
-        <button class="opt-btn ${state.emotion === e.id ? 'selected' : ''}" onclick="selectEmotion('${e.id}')">
-          <strong>${e.label}</strong>
-          <small>${e.desc}</small>
-        </button>
-      `).join('');
-      const current = EMOTIONS.find(e => e.id === state.emotion) || EMOTIONS[1];
-      document.getElementById('emotionBadge').textContent = current.label;
-    }
-
-    function renderPanoramas() {
-      const grid = document.getElementById('panoramaGrid');
-      grid.innerHTML = PANORAMAS.map(p => `
-        <button class="opt-btn ${state.panorama === p.id ? 'selected' : ''}" onclick="selectPanorama('${p.id}')">
-          <strong>${p.label}</strong>
-          <small>${p.desc}</small>
-        </button>
-      `).join('');
-      const current = PANORAMAS.find(p => p.id === state.panorama) || PANORAMAS[1];
-      document.getElementById('panoramaBadge').textContent = current.label;
-    }
-
-    function renderContext() {
-      const mapIds = {
-        tiempo: 'ctxTiempo',
-        presupuesto: 'ctxPresupuesto',
-        ubicacion: 'ctxUbicacion',
-        momento: 'ctxMomento'
+      let verdict = {
+        badge: `${pan.toUpperCase()} · ${moment.replace('_', ' ').toUpperCase()}`,
+        title: '',
+        desc: '',
+        tools: [],
+        steps: []
       };
-      for (const [key, elId] of Object.entries(mapIds)) {
-        const el = document.getElementById(elId);
-        el.innerHTML = CONTEXT_OPTIONS[key].map(val => `
-          <button class="seg-btn ${state.context[key] === val ? 'selected' : ''}" onclick="selectContext('${key}', '${val}')">
-            ${val}
-          </button>
-        `).join('');
+
+      if (pan === 'estudio') {
+        if (sub === 'prog') {
+          verdict.title = 'Bloque de Código: Arquitectura y Pruebas Locales';
+          verdict.desc = 'Enfócate en resolver la lógica por módulos antes de tocar interfaz. Usa herramientas ligeras si estás en Linux Mint.';
+          verdict.tools = loc === 'casa' ? ['NetBeans / Geany', 'Git / GitHub', 'Gemini CLI'] : ['Geany / Terminal javac', 'Apuntes'];
+          verdict.steps = [
+            'Define entradas, proceso y salida esperada antes de escribir código.',
+            'Programa y compila por funciones pequeñas verificando casos borde.',
+            'Haz commit en GitHub y marca la tarea (PROG 2 / Seminario) en Google Tasks.'
+          ];
+        } else if (sub === 'math') {
+          verdict.title = 'Resolución Paso a Paso: Cálculo Integral / Física I';
+          verdict.desc = 'Aplica tu sistema de colores (verde conceptos, amarillo procesos, naranja resultados) y verifica gráficamente antes de cerrar.';
+          verdict.tools = ['StarNote (Cuadrícula A3)', 'GeoGebra', 'Tracker Online'];
+          verdict.steps = [
+            'Plantea el diagrama de cuerpo libre o la región de integración en StarNote.',
+            'Resuelve paso a paso identificando el método (discos, arandelas, cilindros o cinemática).',
+            'Valida el resultado en GeoGebra y crea 2 flashcards en Anki si hubo error.'
+          ];
+        } else if (sub === 'redactar') {
+          verdict.title = 'Redacción Estructurada en Google Docs';
+          verdict.desc = 'Estructura primero los encabezados y desarrolla cada sección con datos concretos sin quedarte pegado editando cada frase.';
+          verdict.tools = ['Google Docs', 'Drive (areas\estudio)', 'Gemini'];
+          verdict.steps = [
+            'Crea el esquema de títulos y subtítulos del informe o ensayo.',
+            'Redacta el borrador completo en un bloque continuo.',
+            'Revisa ortografía, portada (Jhoset Carrasquilla · Grupo 3303A) y guarda en Drive.'
+          ];
+        } else if (sub === 'repaso') {
+          verdict.title = 'Sesión de Repaso Espaciado (Anki / Flashka)';
+          verdict.desc = 'Repasa tus mazos activos usando tus prefijos Q?, c? y cl? para consolidar memoria a largo plazo.';
+          verdict.tools = ['Anki / AnkiDroid', 'Flashka', 'OneNote'];
+          verdict.steps = [
+            'Completa las tarjetas vencidas del día en AnkiDroid.',
+            'Convierte los temas flojos en tarjetas Cloze {{c1::...}} o Básicas.',
+            'Sincroniza con AnkiWeb al terminar.'
+          ];
+        } else {
+          verdict.title = 'Investigación & Síntesis Visual';
+          verdict.desc = 'Recopila fuentes confiables, sintetiza puntos clave y delega borradores visuales si necesitas diapositivas.';
+          verdict.tools = ['Gemini', 'Google Slides / Canva', 'Radar Dispatcher'];
+          verdict.steps = [
+            'Extrae 3 a 5 ideas centrales con datos verificables.',
+            'Organiza el guion visual en diapositivas limpias.',
+            'Ensaya la exposición en voz alta en menos de 5 minutos.'
+          ];
+        }
+      } else if (pan === 'trabajo_rad4r') {
+        verdict.title = 'Operación ON RAD4R: Diseño, Mockups o Despacho';
+        verdict.desc = 'Avanza en la identidad visual de tu marca streetwear o delega tareas repetitivas a Radar en Windows.';
+        verdict.tools = ['Photopea / Canva', 'Plancha Térmica / DTF', 'Radar (@Rad4r2076_bot)'];
+        verdict.steps = [
+          'Prepara el arte en formato 1080x1920 (historias) o pliego DTF 100x58 cm.',
+          'Si requiere automatización o posteo, despacha la misión a Radar.',
+          'Registra costos e inventario en tu app Wallet.'
+        ];
+      } else if (pan === 'trabajo_domi') {
+        verdict.title = 'Producción en Calle / Soporte Técnico';
+        verdict.desc = 'Activa ruta eficiente en Cali minimizando kilómetros muertos y registrando cada ingreso al instante.';
+        verdict.tools = ['Suzuki GN 125', 'Google Maps', 'App Wallet (Nequi/Efectivo)'];
+        verdict.steps = [
+          'Revisa nivel de combustible, cadena y presión de llantas antes de salir.',
+          'Agrupa entregas por zonas cercanas (Siloé, Calle 5, Jardín Plaza, Palmira).',
+          'Anota lo producido en Wallet al cerrar turno.'
+        ];
+      } else if (pan === 'musica') {
+        const m = MUSIC_ROTATION[STATE.musicIdx % MUSIC_ROTATION.length];
+        document.getElementById('music-inst').textContent = m.inst;
+        document.getElementById('music-scale').textContent = m.scale;
+        document.getElementById('music-key').textContent = m.key;
+
+        verdict.title = `Sesión Musical: ${m.inst} en ${m.key}`;
+        verdict.desc = 'Combina técnica de escala/tonalidad con creación libre para que cada sesión sume vocabulario real a tus beats y freestyle.';
+        verdict.tools = ['FL Studio / BandLab', m.inst, 'music_bridge.py (MIDI)'];
+        verdict.steps = [
+          `Calienta 10 minutos practicando la escala ${m.scale} en ${m.key}.`,
+          'Graba una idea rítmica o melódica de 8 compases sin juzgarla.',
+          'Si salió un buen loop, expórtalo o pásalo por MIDI a FL Studio.'
+        ];
+      } else if (pan === 'amigos') {
+        const topFriend = getSortedFriends()[0];
+        const planText = BUDGET_DATA[budget].plans[0].text;
+        verdict.title = `Conectar con ${topFriend.name} (${topFriend.days} días sin verse)`;
+        verdict.desc = `Según tu rotación social y tu presupuesto actual (${BUDGET_DATA[budget].badge}), este es el parche más natural y sin fricción.`;
+        verdict.tools = ['WhatsApp / Llamada', 'Suzuki GN 125', `Presupuesto: ${BUDGET_DATA[budget].badge}`];
+        verdict.steps = [
+          `Escríbele ya a ${topFriend.name}: "Qué más, ¿parchamos un rato hoy?"`,
+          `Plan sugerido: ${planText}.`,
+          'Al volver, dale al botón "Ya salimos hoy ✓" en la tarjeta de Rotación Social.'
+        ];
+      } else if (pan === 'deporte') {
+        const isFindeDia = moment === 'finde_dia';
+        const sportChoice = sub === 'natacion' || (isFindeDia && sub !== 'calistenia')
+          ? 'Natación (Aprovechando el día de fin de semana)'
+          : (sub === 'basquet' ? 'Básquetbol en cancha local' : 'Rutina de Calistenia & Fuerza');
+        verdict.title = `Activación Física: ${sportChoice}`;
+        verdict.desc = isFindeDia
+          ? 'Es fin de semana de día: momento ideal para natación o rodada activa.'
+          : 'Entre semana o de noche: prioriza calistenia (Lun/Mar/Jue/Vie) o básquetbol.';
+        verdict.tools = ['Cronómetro', 'Hidratación', 'Equipamiento deportivo'];
+        verdict.steps = [
+          'Haz 8 minutos de movilidad articular antes de arrancar.',
+          'Completa el bloque principal manteniendo técnica limpia.',
+          'Registra el entrenamiento en Daylio.'
+        ];
+      } else {
+        // TIEMPO LIBRE
+        const plan = BUDGET_DATA[budget].plans[0].text;
+        verdict.title = `Plan Recomendado (${BUDGET_DATA[budget].badge})`;
+        verdict.desc = 'Tienes ventana libre y estás estable. Aprovecha el tiempo con una actividad que recargue energía sin descuadrar el bolsillo.';
+        verdict.tools = ['Marco de Decisión', `Caja: ${BUDGET_DATA[budget].badge}`];
+        verdict.steps = [
+          `Opción principal hoy: ${plan}.`,
+          'Si prefieres quedarte en casa, rota a Música/FL Studio o Lectura.',
+          'Mantén el celular en silencio durante el bloque elegido.'
+        ];
       }
+
+      badgeEl.textContent = verdict.badge;
+      titleEl.textContent = verdict.title;
+      descEl.textContent = verdict.desc;
+      renderToolsAndSteps(verdict.tools, verdict.steps);
     }
 
-    function daysSince(isoDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const d = new Date(isoDate + 'T00:00:00');
-      const diff = Math.floor((today - d) / 86400000);
-      return Math.max(0, diff);
+    function renderToolsAndSteps(tools, steps) {
+      const toolsEl = document.getElementById('tools-list');
+      const stepsEl = document.getElementById('steps-list');
+      toolsEl.innerHTML = tools.map(t => `<span class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-cyan-300 border border-slate-700">${t}</span>`).join('');
+      stepsEl.innerHTML = steps.map((s, i) => `
+        <li class="flex items-start gap-3 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+          <span class="w-6 h-6 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center justify-center text-xs font-bold shrink-0">${i + 1}</span>
+          <span>${s}</span>
+        </li>
+      `).join('');
     }
 
-    function tierThreshold(tier) {
-      if (tier === 'Parche diario') return 2;
-      if (tier === 'Cercano/Semanal') return 7;
-      return 15;
+    function renderBudget(budgetKey) {
+      const data = BUDGET_DATA[budgetKey];
+      document.getElementById('budget-badge').textContent = data.badge;
+      document.getElementById('budget-plans-list').innerHTML = data.plans.map(p => `
+        <li class="flex items-start gap-2 p-2.5 rounded-xl ${p.ok ? 'bg-emerald-950/30 border border-emerald-800/50 text-slate-200' : 'bg-slate-950/50 border border-slate-800/60 text-slate-500 line-through'}">
+          <span>${p.ok ? '✅' : '🔒'}</span>
+          <span>${p.text}</span>
+        </li>
+      `).join('');
     }
 
-    function renderSocial() {
-      const filter = document.getElementById('socialFilter').value;
-      const list = document.getElementById('socialList');
-      const enriched = state.friends
-        .map((f, idx) => ({ ...f, idx, days: daysSince(f.lastSeenIso) }))
-        .filter(f => filter === 'all' || f.tier === filter)
-        .sort((a, b) => (b.days - tierThreshold(b.tier)) - (a.days - tierThreshold(a.tier)));
+    function getSortedFriends() {
+      const threshold = { diario: 4, semanal: 9, ocasional: 15 };
+      return [...STATE.friends].sort((a, b) => (b.days / threshold[b.tier]) - (a.days / threshold[a.tier]));
+    }
 
-      list.innerHTML = enriched.map(f => {
-        const overdue = f.days >= tierThreshold(f.tier);
-        const tierColor = f.tier === 'Parche diario' ? 'cyan' : f.tier === 'Cercano/Semanal' ? 'violet' : 'amber';
+    function renderFriends() {
+      const sorted = getSortedFriends();
+      const top = sorted[0];
+      document.getElementById('social-alert').innerHTML = top
+        ? `🔔 Prioridad de rotación: <strong>${top.name}</strong> (${top.days} días sin ver · círculo ${top.tier}).`
+        : 'Agrega amigos a tu lista de rotación.';
+
+      document.getElementById('friends-list').innerHTML = sorted.map(f => {
+        const idx = STATE.friends.findIndex(x => x.name === f.name);
         return `
-          <div class="friend-row">
-            <div class="friend-info">
-              <span class="friend-name">${f.name}</span>
-              <span class="badge ${tierColor}">${f.tier}</span>
-              <span class="friend-days" style="color:${overdue ? 'var(--rose)' : 'var(--green)'}">
-                ${f.days === 0 ? 'Hoy (0 días)' : `${f.days} días sin ver`}
-              </span>
+          <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div>
+              <div class="text-xs font-bold text-white">${f.name} <span class="text-[10px] font-normal text-slate-400">(${f.days}d)</span></div>
+              <select onchange="changeFriendTier(${idx}, this.value)" class="mt-1 text-[10px] rounded px-1.5 py-0.5 bg-slate-900 border-slate-700 text-slate-300">
+                <option value="diario" ${f.tier==='diario'?'selected':''}>Parche diario</option>
+                <option value="semanal" ${f.tier==='semanal'?'selected':''}>Cercano / Semanal</option>
+                <option value="ocasional" ${f.tier==='ocasional'?'selected':''}>Ocasional</option>
+              </select>
             </div>
-            <button class="btn-saw" onclick="markSawToday(${f.idx})">Ya salimos hoy</button>
+            <button onclick="resetFriendDays(${idx})" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30">
+              Ya salimos ✓
+            </button>
           </div>
         `;
       }).join('');
     }
 
-    function markSawToday(idx) {
-      state.friends[idx].lastSeenIso = new Date().toISOString().slice(0, 10);
-      state.customVerdict = null;
-      saveState();
-      renderSocial();
-      renderVerdict();
+    function resetFriendDays(idx) {
+      STATE.friends[idx].days = 0;
+      localStorage.setItem('md_friends', JSON.stringify(STATE.friends));
+      renderFriends();
+      updateSystem();
     }
 
-    function renderMusic() {
-      document.getElementById('musicInstrument').textContent = MUSIC_INSTRUMENTS[state.music.instIdx];
-      document.getElementById('musicScale').textContent = MUSIC_SCALES[state.music.scaleIdx];
-      document.getElementById('musicKey').textContent = MUSIC_KEYS[state.music.keyIdx];
-      document.getElementById('musicStats').textContent = `Sesiones registradas: ${state.music.sessions}`;
+    function changeFriendTier(idx, newTier) {
+      STATE.friends[idx].tier = newTier;
+      localStorage.setItem('md_friends', JSON.stringify(STATE.friends));
+      renderFriends();
+    }
+
+    function addFriend() {
+      const nameInp = document.getElementById('new-friend-name');
+      const tierSel = document.getElementById('new-friend-tier');
+      const name = nameInp.value.trim();
+      if (!name) return;
+      STATE.friends.push({ name, tier: tierSel.value, days: 5 });
+      localStorage.setItem('md_friends', JSON.stringify(STATE.friends));
+      nameInp.value = '';
+      renderFriends();
     }
 
     function rotateMusic() {
-      state.music.instIdx = (state.music.instIdx + 1) % MUSIC_INSTRUMENTS.length;
-      state.music.scaleIdx = (state.music.scaleIdx + 1) % MUSIC_SCALES.length;
-      state.music.keyIdx = (state.music.keyIdx + 5) % MUSIC_KEYS.length; // círculo de cuartas
-      saveState();
-      renderMusic();
-      renderVerdict();
+      STATE.musicIdx = (STATE.musicIdx + 1) % MUSIC_ROTATION.length;
+      localStorage.setItem('md_music_idx', String(STATE.musicIdx));
+      updateSystem();
     }
 
-    function logMusicSession() {
-      state.music.sessions += 1;
-      rotateMusic();
+    function markSessionDone() {
+      STATE.sessions += 1;
+      localStorage.setItem('md_sessions', String(STATE.sessions));
+      document.getElementById('session-counter').textContent = STATE.sessions;
     }
 
-    function renderProtocol() {
-      const items = PROTOCOLS[state.activeProto] || PROTOCOLS.estudio;
-      const container = document.getElementById('protoContent');
-      container.innerHTML = `<div class="check-list">` + items.map((text, i) => {
-        const key = `${state.activeProto}_${i}`;
-        const checked = !!state.protocolChecks[key];
-        return `
-          <label class="check-item ${checked ? 'done' : ''}">
-            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleProtoCheck('${key}')" />
-            <span>${text}</span>
-          </label>
-        `;
-      }).join('') + `</div>`;
-    }
+    // COMANDO INTELIGENTE: "NO SÉ QUÉ HACER"
+    function triggerNoSeQueHacer() {
+      const raw = document.getElementById('inp-natural-context').value.toLowerCase();
+      const out = document.getElementById('ai-command-output');
 
-    function selectProto(name, btn) {
-      state.activeProto = name;
-      document.querySelectorAll('#protoTabs .mini-btn').forEach(b => b.classList.remove('active'));
-      if (btn) btn.classList.add('active');
-      saveState();
-      renderProtocol();
-    }
+      // Detección inteligente en lenguaje natural
+      if (raw.includes('ansios') || raw.includes('pensando')) document.getElementById('sel-emotion').value = 'ansioso';
+      else if (raw.includes('triste') || raw.includes('bajon')) document.getElementById('sel-emotion').value = 'triste';
+      else if (raw.includes('enoj') || raw.includes('rabia') || raw.includes('ira')) document.getElementById('sel-emotion').value = 'enojado';
+      else if (raw.includes('bloquead')) document.getElementById('sel-emotion').value = 'bloqueado';
+      else if (raw.includes('cansad') || raw.includes('agotad') || raw.includes('sueño')) document.getElementById('sel-emotion').value = 'cansado';
 
-    function toggleProtoCheck(key) {
-      state.protocolChecks[key] = !state.protocolChecks[key];
-      saveState();
-      renderProtocol();
-    }
+      if (raw.includes('sin plata') || raw.includes('$0') || raw.includes('nada de plata')) document.getElementById('sel-budget').value = '0';
+      else if (raw.includes('5k') || raw.includes('10k') || raw.includes('5000') || raw.includes('10000') || raw.includes('barato')) document.getElementById('sel-budget').value = '1';
+      else if (raw.includes('15k') || raw.includes('15000') || raw.includes('salchipapa')) document.getElementById('sel-budget').value = '2';
+      else if (raw.includes('cine') || raw.includes('flexible') || raw.includes('roce')) document.getElementById('sel-budget').value = '3';
 
-    function resetCurrentProtocol() {
-      Object.keys(state.protocolChecks).forEach(k => {
-        if (k.startsWith(state.activeProto + '_')) delete state.protocolChecks[k];
-      });
-      saveState();
-      renderProtocol();
-    }
-
-    // ========================
-    // VEREDICTO EJECUTIVO LOCAL
-    // ========================
-    function buildLocalVerdict() {
-      const emo = EMOTIONS.find(e => e.id === state.emotion);
-      const pan = PANORAMAS.find(p => p.id === state.panorama);
-      const { tiempo, presupuesto, ubicacion, momento } = state.context;
-      const topFriend = [...state.friends]
-        .map(f => ({ ...f, days: daysSince(f.lastSeenIso) }))
-        .sort((a, b) => (b.days - tierThreshold(b.tier)) - (a.days - tierThreshold(a.tier)))[0];
-
-      let title = `Ejecutar ${pan.label} en bloque de ${tiempo}`;
-      const steps = [];
-
-      if (state.emotion === 'ansioso' || state.emotion === 'cansado') {
-        title = `Regulación primero (5 min) → ${pan.label} ligero`;
-        steps.push(`Inicia el temporizador de regulación (5 min) antes de abrir tareas pesadas.`);
-      } else if (state.emotion === 'bloqueado') {
-        title = `Micro-arranque de 5 min en ${pan.label}`;
-        steps.push(`No negocies el proyecto entero: haz solo la primera acción visible durante 5 minutos.`);
+      if (raw.includes('tarea') || raw.includes('estudi') || raw.includes('parcial') || raw.includes('u')) {
+        document.getElementById('sel-panorama').value = 'estudio';
+        onPanoramaChange();
+      } else if (raw.includes('amig') || raw.includes('salir') || raw.includes('parche')) {
+        document.getElementById('sel-panorama').value = 'amigos';
+        onPanoramaChange();
+      } else if (raw.includes('music') || raw.includes('piano') || raw.includes('beat') || raw.includes('rap')) {
+        document.getElementById('sel-panorama').value = 'musica';
+        onPanoramaChange();
+      } else if (raw.includes('entren') || raw.includes('calistenia') || raw.includes('deporte')) {
+        document.getElementById('sel-panorama').value = 'deporte';
+        onPanoramaChange();
       } else {
-        steps.push(`Condición óptima (${emo.label}): bloque directo de ${tiempo} en ${ubicacion}.`);
+        updateSystem();
       }
 
-      if (state.panorama === 'social') {
-        title = `Conectar con ${topFriend.name} (${topFriend.days} días sin ver)`;
-        if (presupuesto === '$0') {
-          steps.push(`Plan Cali $0: caminata al parque, parche en casa o llamada/mensaje directo.`);
-        } else if (presupuesto === '$5.000 - $10.000') {
-          steps.push(`Plan Cali $5k–$10k: MIO/transporte + tinto o cholado/empanada ligera.`);
-        } else if (presupuesto === '$15.000') {
-          steps.push(`Plan Cali $15k: café, hamburguesa económica o salida de tarde.`);
-        } else {
-          steps.push(`Presupuesto flexible: salida completa o actividad planificada.`);
-        }
-      } else if (state.panorama === 'musica') {
-        const inst = MUSIC_INSTRUMENTS[state.music.instIdx];
-        const scale = MUSIC_SCALES[state.music.scaleIdx];
-        const key = MUSIC_KEYS[state.music.keyIdx];
-        steps.push(`Rotación Doble: practica ${inst} en escala ${scale} (${key}) por ${tiempo}.`);
-      } else if (state.panorama === 'trabajo') {
-        if (ubicacion === 'En ruta' || ubicacion === 'Calle / Cali') {
-          steps.push(`Prioriza Motorratón / Rappi o entregas según demanda de ${momento}.`);
-        } else {
-          steps.push(`En casa: YouTube, Servicio técnico o flujo ON RAD4R con presupuesto ${presupuesto}.`);
-        }
-      } else if (state.panorama === 'estudio') {
-        steps.push(`Usa el protocolo Estudio: AnalizarInforma (colores + códigos) o Método Repasar.`);
-      } else if (state.panorama === 'onrad4r') {
-        steps.push(`Abre pestaña ON RAD4R: valida demanda y costos (${presupuesto}) antes de producir.`);
-      } else if (state.panorama === 'deportes') {
-        steps.push(`Activa protocolo Deportes adaptado a ${presupuesto} (${ubicacion}).`);
-      } else if (state.panorama === 'cierre') {
-        steps.push(`Ejecuta los 4 pasos del Cierre Unificado y deja listo el primer bloque de mañana.`);
-      }
-
-      steps.push(`Alerta social: ${topFriend.name} (${topFriend.tier}) lleva ${topFriend.days} días sin verse.`);
-
-      return {
-        source: 'Motor Local',
-        title,
-        meta: `${emo.label} · ${pan.label} · ${tiempo} · ${presupuesto} · ${ubicacion} · ${momento}`,
-        steps
-      };
+      const title = document.getElementById('verdict-title').textContent;
+      const topFriend = getSortedFriends()[0];
+      out.classList.remove('hidden');
+      out.innerHTML = `
+        <strong class="text-cyan-300">⚡ Diagnóstico Marco de Decisión:</strong><br/>
+        Tu jugada más limpia ahora mismo es: <span class="text-white font-semibold">${title}</span>.
+        ${topFriend ? `<br/><span class="text-xs text-slate-400">Dato social: llevas ${topFriend.days} días sin ver a ${topFriend.name}.</span>` : ''}
+      `;
     }
 
-    function renderVerdict() {
-      const v = state.customVerdict || buildLocalVerdict();
-      document.getElementById('verdictSource').textContent = v.source;
-      document.getElementById('verdictTitle').textContent = v.title;
-      document.getElementById('verdictMeta').textContent = v.meta;
-      document.getElementById('verdictSteps').innerHTML = v.steps
-        .map((s, idx) => `<li><strong style="color:var(--cyan)">0${idx + 1}</strong><span>${s}</span></li>`)
-        .join('');
-    }
-
-    // ========================
-    // ACCIONES DE SELECTORES
-    // ========================
-    function selectEmotion(id) {
-      state.emotion = id;
-      state.customVerdict = null;
-      const emo = EMOTIONS.find(e => e.id === id);
-      if (emo && emo.timerMin > 0) setTimerMinutes(emo.timerMin);
-      saveState();
-      renderEmotions();
-      renderVerdict();
-    }
-
-    function selectPanorama(id) {
-      state.panorama = id;
-      state.customVerdict = null;
-      if (['estudio', 'onrad4r', 'deportes', 'cierre'].includes(id)) {
-        state.activeProto = id;
-        document.querySelectorAll('#protoTabs .mini-btn').forEach(b => {
-          b.classList.toggle('active', b.getAttribute('onclick').includes(`'${id}'`));
-        });
-        renderProtocol();
-      }
-      saveState();
-      renderPanoramas();
-      renderVerdict();
-    }
-
-    function selectContext(key, val) {
-      state.context[key] = val;
-      state.customVerdict = null;
-      saveState();
-      renderContext();
-      renderVerdict();
-    }
-
-    // ========================
-    // TEMPORIZADOR DE REGULACIÓN
-    // ========================
-    let timerSeconds = 300;
-    let timerBaseSeconds = 300;
-    let timerHandle = null;
-
-    function updateTimerUI() {
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-      const s = String(timerSeconds % 60).padStart(2, '0');
-      document.getElementById('timerDisplay').textContent = `${m}:${s}`;
-      document.getElementById('btnTimerToggle').textContent = timerHandle ? 'Pausar' : 'Iniciar';
-    }
-
-    function setTimerMinutes(min) {
-      clearInterval(timerHandle);
-      timerHandle = null;
-      timerBaseSeconds = min * 60;
-      timerSeconds = timerBaseSeconds;
-      updateTimerUI();
-    }
-
-    function toggleTimer() {
-      if (timerHandle) {
-        clearInterval(timerHandle);
-        timerHandle = null;
-        updateTimerUI();
-        return;
-      }
-      if (timerSeconds <= 0) timerSeconds = timerBaseSeconds;
-      timerHandle = setInterval(() => {
-        timerSeconds -= 1;
-        if (timerSeconds <= 0) {
-          timerSeconds = 0;
-          clearInterval(timerHandle);
-          timerHandle = null;
-          document.getElementById('timerDisplay').style.color = 'var(--green)';
-        }
-        updateTimerUI();
+    // TEMPORIZADOR
+    let timerInterval = null;
+    function startTimer(mins) {
+      clearInterval(timerInterval);
+      let secs = mins * 60;
+      updateTimerText(secs);
+      timerInterval = setInterval(() => {
+        secs--;
+        updateTimerText(secs);
+        if (secs <= 0) clearInterval(timerInterval);
       }, 1000);
-      document.getElementById('timerDisplay').style.color = 'var(--cyan)';
-      updateTimerUI();
+    }
+    function stopTimer() { clearInterval(timerInterval); }
+    function updateTimerText(secs) {
+      const m = String(Math.floor(secs / 60)).padStart(2, '0');
+      const s = String(secs % 60).padStart(2, '0');
+      document.getElementById('timer-display').textContent = `${m}:${s}`;
     }
 
-    function resetTimer() {
-      clearInterval(timerHandle);
-      timerHandle = null;
-      timerSeconds = timerBaseSeconds;
-      document.getElementById('timerDisplay').style.color = 'var(--cyan)';
-      updateTimerUI();
-    }
+    // CAMBIO DE VISTA
+    function switchView(v) {
+      STATE.view = v;
+      const actionEl = document.getElementById('view-action');
+      const mapEl = document.getElementById('view-map');
+      const btnA = document.getElementById('btn-view-action');
+      const btnM = document.getElementById('btn-view-map');
 
-    // ========================
-    // COMANDO "NO SÉ QUÉ HACER" + GEMINI API
-    // ========================
-    function fillExample(txt) {
-      document.getElementById('smartInput').value = txt;
-    }
-
-    function updateApiStatusPill() {
-      const pill = document.getElementById('apiStatusPill');
-      if (state.geminiKey) {
-        pill.textContent = 'Gemini API: Conectada';
-        pill.className = 'badge green';
+      if (v === 'action') {
+        actionEl.classList.remove('hidden');
+        mapEl.classList.add('hidden');
+        btnA.classList.add('tab-active');
+        btnA.classList.remove('text-slate-400');
+        btnM.classList.remove('tab-active');
+        btnM.classList.add('text-slate-400');
       } else {
-        pill.textContent = 'Motor: Local (sin API Key)';
-        pill.className = 'badge';
-      }
-    }
-
-    function openApiModal() {
-      document.getElementById('apiKeyInput').value = state.geminiKey || '';
-      document.getElementById('apiModal').classList.add('open');
-    }
-    function closeApiModal() { document.getElementById('apiModal').classList.remove('open'); }
-    function saveApiKey() {
-      const val = document.getElementById('apiKeyInput').value.trim();
-      state.geminiKey = val;
-      localStorage.setItem('marco_gemini_api_key', val);
-      updateApiStatusPill();
-      closeApiModal();
-    }
-    function clearApiKey() {
-      state.geminiKey = '';
-      localStorage.removeItem('marco_gemini_api_key');
-      document.getElementById('apiKeyInput').value = '';
-      updateApiStatusPill();
-      closeApiModal();
-    }
-
-    function applyLocalNlp(text) {
-      const t = text.toLowerCase();
-      if (t.includes('cansad') || t.includes('agotad') || t.includes('sueñ')) state.emotion = 'cansado';
-      else if (t.includes('ansios') || t.includes('saturad') || t.includes('estres')) state.emotion = 'ansioso';
-      else if (t.includes('desmotiv') || t.includes('bloquead') || t.includes('pereza')) state.emotion = 'bloqueado';
-      else if (t.includes('energ') || t.includes('motivad') || t.includes('enfocad')) state.emotion = 'enfocado';
-      else if (t.includes('inquiet') || t.includes('aburrid') || t.includes('salir')) state.emotion = 'inquieto';
-
-      if (t.includes('músic') || t.includes('music') || t.includes('guitar') || t.includes('piano')) state.panorama = 'musica';
-      else if (t.includes('rad4r') || t.includes('camiset') || t.includes('estamp')) state.panorama = 'onrad4r';
-      else if (t.includes('estud') || t.includes('repas') || t.includes('anki')) state.panorama = 'estudio';
-      else if (t.includes('diner') || t.includes('plata') || t.includes('rappi') || t.includes('trabaj')) state.panorama = 'trabajo';
-      else if (t.includes('deport') || t.includes('entren') || t.includes('gym')) state.panorama = 'deportes';
-      else if (t.includes('amig') || t.includes('parch') || t.includes('cris') || t.includes('aleja') || t.includes('majo')) state.panorama = 'social';
-      else if (t.includes('dormir') || t.includes('cierre') || t.includes('cerrar')) state.panorama = 'cierre';
-
-      if (t.includes('15')) state.context.tiempo = '15 min';
-      else if (t.includes('30') || t.includes('media hora')) state.context.tiempo = '30 min';
-      else if (t.includes('2 hora') || t.includes('libre')) state.context.tiempo = '2+ horas';
-      else if (t.includes('1 hora') || t.includes('45')) state.context.tiempo = '1 hora';
-
-      if (t.includes('$0') || t.includes('cero') || t.includes('sin plata') || t.includes('sin gastar')) state.context.presupuesto = '$0';
-      else if (t.includes('5.000') || t.includes('5000') || t.includes('10.000') || t.includes('10k')) state.context.presupuesto = '$5.000 - $10.000';
-      else if (t.includes('15.000') || t.includes('15000') || t.includes('15k')) state.context.presupuesto = '$15.000';
-      else if (t.includes('invers') || t.includes('flexibl')) state.context.presupuesto = 'Inversión / Flexible';
-
-      if (t.includes('casa')) state.context.ubicacion = 'Casa';
-      else if (t.includes('universidad') || t.includes('u ')) state.context.ubicacion = 'Universidad';
-      else if (t.includes('calle') || t.includes('cali')) state.context.ubicacion = 'Calle / Cali';
-      else if (t.includes('ruta') || t.includes('moto')) state.context.ubicacion = 'En ruta';
-    }
-
-    async function runNoSeQueHacer() {
-      const btn = document.getElementById('btnNoSeQueHacer');
-      const rawText = document.getElementById('smartInput').value.trim();
-      btn.disabled = true;
-      btn.textContent = 'Analizando...';
-
-      if (!state.geminiKey) {
-        if (rawText) applyLocalNlp(rawText);
-        state.customVerdict = null;
-        saveState();
-        renderAll();
-        btn.disabled = false;
-        btn.textContent = '⚡ No sé qué hacer';
-        return;
-      }
-
-      try {
-        const friendsSummary = state.friends.map(f => `${f.name} (${f.tier}, ${daysSince(f.lastSeenIso)}d)`).join(', ');
-        const prompt = `Eres el motor ejecutivo de "Marco de Decisión" para Beymar en Cali, Colombia.
-Analiza el contexto libre del usuario y devuelve ÚNICAMENTE un JSON válido con esta estructura exacta:
-{
-  "emotion": "enfocado|estable|cansado|ansioso|bloqueado|inquieto",
-  "panorama": "trabajo|estudio|onrad4r|musica|social|deportes|personal|cierre",
-  "tiempo": "15 min|30 min|1 hora|2+ horas",
-  "presupuesto": "$0|$5.000 - $10.000|$15.000|Inversión / Flexible",
-  "ubicacion": "Casa|Calle / Cali|Universidad|En ruta",
-  "momento": "Mañana|Tarde|Noche|Fin de semana",
-  "title": "Veredicto directo de 1 línea",
-  "steps": ["Paso 1 accionable en 2 min", "Paso 2 ejecución principal", "Paso 3 cierre o recomendación social/musical"]
-}
-Contexto libre del usuario: "${rawText || 'Sin texto libre, usa el estado actual y prioriza acción inmediata.'}"
-Estado actual: emoción=${state.emotion}, panorama=${state.panorama}, tiempo=${state.context.tiempo}, presupuesto=${state.context.presupuesto}, ubicación=${state.context.ubicacion}, momento=${state.context.momento}.
-Amigos: ${friendsSummary}.
-Música actual: ${MUSIC_INSTRUMENTS[state.music.instIdx]} - ${MUSIC_SCALES[state.music.scaleIdx]} (${MUSIC_KEYS[state.music.keyIdx]}).`;
-
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.geminiKey)}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { responseMimeType: 'application/json', temperature: 0.4 }
-            })
-          }
-        );
-
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        const jsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        const parsed = JSON.parse(jsonText);
-
-        if (EMOTIONS.some(e => e.id === parsed.emotion)) state.emotion = parsed.emotion;
-        if (PANORAMAS.some(p => p.id === parsed.panorama)) state.panorama = parsed.panorama;
-        if (CONTEXT_OPTIONS.tiempo.includes(parsed.tiempo)) state.context.tiempo = parsed.tiempo;
-        if (CONTEXT_OPTIONS.presupuesto.includes(parsed.presupuesto)) state.context.presupuesto = parsed.presupuesto;
-        if (CONTEXT_OPTIONS.ubicacion.includes(parsed.ubicacion)) state.context.ubicacion = parsed.ubicacion;
-        if (CONTEXT_OPTIONS.momento.includes(parsed.momento)) state.context.momento = parsed.momento;
-
-        state.customVerdict = {
-          source: 'Gemini API',
-          title: parsed.title || 'Acción ejecutiva recomendada',
-          meta: `${state.emotion} · ${state.panorama} · ${state.context.tiempo} · ${state.context.presupuesto}`,
-          steps: Array.isArray(parsed.steps) && parsed.steps.length ? parsed.steps : ['Ejecutar primer bloque de 15 minutos.']
-        };
-      } catch (err) {
-        console.error('Gemini fallback:', err);
-        if (rawText) applyLocalNlp(rawText);
-        state.customVerdict = {
-          ...buildLocalVerdict(),
-          source: 'Motor Local (fallback API)'
-        };
-      } finally {
-        saveState();
-        renderAll();
-        btn.disabled = false;
-        btn.textContent = '⚡ No sé qué hacer';
-      }
-    }
-
-    // ========================
-    // VISTA DUAL + MAPA 2D CANVAS (60 FPS)
-    // ========================
-    let currentView = 'action';
-    function switchView(view) {
-      currentView = view;
-      document.getElementById('view-action').classList.toggle('active', view === 'action');
-      document.getElementById('view-map').classList.toggle('active', view === 'map');
-      document.getElementById('btnModeAction').classList.toggle('active', view === 'action');
-      document.getElementById('btnModeMap').classList.toggle('active', view === 'map');
-      if (view === 'map') {
+        actionEl.classList.add('hidden');
+        mapEl.classList.remove('hidden');
+        btnM.classList.add('tab-active');
+        btnM.classList.remove('text-slate-400');
+        btnA.classList.remove('tab-active');
+        btnA.classList.add('text-slate-400');
         resizeCanvas();
-        if (!mapAnimStarted) {
-          mapAnimStarted = true;
-          requestAnimationFrame(drawMapLoop);
-        }
       }
     }
 
-    const MAP_NODES = [
-      { id: 'inicio', label: 'Marco de Decisión', sub: 'Embudo Central', x: 0, y: -220, color: '#00e5ff', w: 200, h: 64 },
-      { id: 'emocion', label: '¿Cómo estás?', sub: '6 Estados + Timer', x: -240, y: -90, color: '#f43f5e', w: 180, h: 60 },
-      { id: 'contexto', label: 'Contexto Cali', sub: 'Tiempo · $0-$15k+ · Lugar', x: 240, y: -90, color: '#10b981', w: 195, h: 60 },
-      { id: 'trabajo', label: 'Clase Trabajo', sub: 'YT · Técnico · Rappi', x: -390, y: 80, color: '#f59e0b', w: 175, h: 62 },
-      { id: 'onrad4r', label: 'ON RAD4R', sub: 'Estampado & Demanda', x: -195, y: 80, color: '#fb923c', w: 170, h: 62 },
-      { id: 'estudio', label: 'class Estudio', sub: '6 Subprocesos', x: 0, y: 80, color: '#38bdf8', w: 170, h: 62 },
-      { id: 'musica', label: 'Rotación Musical', sub: 'Instrumento+Escala+Tono', x: 195, y: 80, color: '#818cf8', w: 185, h: 62 },
-      { id: 'social', label: 'Rotación Social', sub: '7 Amigos · Ya salimos hoy', x: 395, y: 80, color: '#ec4899', w: 185, h: 62 },
-      { id: 'analizar', label: 'AnalizarInforma', sub: 'Colores + Códigos D/EX/CN', x: -140, y: 215, color: '#38bdf8', w: 180, h: 56 },
-      { id: 'repasar', label: 'Método Repasar', sub: 'Flashcards + Espaciado', x: 60, y: 215, color: '#38bdf8', w: 175, h: 56 },
-      { id: 'deportes', label: 'Deportes', sub: 'Activación Física', x: 260, y: 215, color: '#10b981', w: 160, h: 56 },
-      { id: 'cierre', label: 'Cierre Unificado', sub: 'Registro + Mañana', x: 0, y: 335, color: '#94a3b8', w: 195, h: 58 }
-    ];
-
-    const MAP_EDGES = [
-      ['inicio', 'emocion'], ['inicio', 'contexto'],
-      ['emocion', 'trabajo'], ['emocion', 'onrad4r'], ['emocion', 'estudio'],
-      ['contexto', 'estudio'], ['contexto', 'musica'], ['contexto', 'social'], ['contexto', 'deportes'],
-      ['estudio', 'analizar'], ['estudio', 'repasar'],
-      ['analizar', 'cierre'], ['repasar', 'cierre'], ['trabajo', 'cierre'], ['musica', 'cierre'], ['social', 'cierre'], ['deportes', 'cierre']
-    ];
-
-    const canvas = document.getElementById('mapCanvas');
+    // MOTOR HTML5 CANVAS 2D A 60 FPS (MAPA AMPLIO)
+    const canvas = document.getElementById('flow-canvas');
     const ctx = canvas.getContext('2d');
-    let cam = { x: 0, y: 0, zoom: 1, targetX: 0, targetY: 0, targetZoom: 1 };
-    let draggingMap = false, dragStart = { x: 0, y: 0 }, selectedNode = null, mapAnimStarted = false;
+    let cam = { x: 60, y: 40, zoom: 1 };
+    let dragging = false, lastMouse = { x: 0, y: 0 }, dashOffset = 0;
 
-    function initMapButtons() {
-      const box = document.getElementById('mapFocusButtons');
-      box.innerHTML = MAP_NODES.map(n =>
-        `<button class="mini-btn" onclick="focusMapNode('${n.id}')">${n.label}</button>`
-      ).join('');
-    }
+    const NODES = [
+      { id: 'inicio', x: 60, y: 240, w: 180, h: 64, label: 'INICIO · BEYMAR', sub: 'Comando: No sé qué hacer' },
+      { id: 'emocion', x: 310, y: 240, w: 200, h: 64, label: '1. FILTRO EMOCIONAL', sub: '6 Estados · Prioridad 1' },
+      { id: 'regulacion', x: 310, y: 80, w: 200, h: 64, label: 'REGULACIÓN ACTIVA', sub: 'Bitácora / Música / Calistenia' },
+      { id: 'panorama', x: 580, y: 240, w: 210, h: 64, label: '2. PANORAMA ACTIVO', sub: 'Estudio · RAD4R · Libre' },
+      { id: 'contexto', x: 860, y: 240, w: 210, h: 64, label: '3. CONTEXTO CALI', sub: '$0 | $5k-$10k | $15k | Flex' },
+      { id: 'accion', x: 1140, y: 150, w: 220, h: 68, label: 'VEREDICTO EJECUTIVO', sub: 'Herramientas + Pasos' },
+      { id: 'social', x: 1140, y: 330, w: 220, h: 68, label: 'ROTACIÓN SOCIAL & MÚSICA', sub: 'Amigos + Escalas/Tonalidad' },
+      { id: 'cierre', x: 1430, y: 240, w: 190, h: 64, label: 'CIERRE UNIFICADO', sub: 'Google Tasks / Bitácora' }
+    ];
+
+    const EDGES = [
+      ['inicio', 'emocion'],
+      ['emocion', 'regulacion'],
+      ['regulacion', 'cierre'],
+      ['emocion', 'panorama'],
+      ['panorama', 'contexto'],
+      ['contexto', 'accion'],
+      ['contexto', 'social'],
+      ['accion', 'cierre'],
+      ['social', 'cierre']
+    ];
 
     function resizeCanvas() {
       const rect = canvas.parentElement.getBoundingClientRect();
@@ -1466,186 +854,96 @@ Música actual: ${MUSIC_INSTRUMENTS[state.music.instIdx]} - ${MUSIC_SCALES[state
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (cam.x === 0 && cam.y === 0) resetMapCamera();
     }
 
-    function resetMapCamera() {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      cam.targetX = rect.width / 2;
-      cam.targetY = rect.height / 2 - 40;
-      cam.targetZoom = Math.min(1, Math.max(0.55, rect.width / 1020));
+    function resetCanvasCamera() {
+      cam = { x: 40, y: 40, zoom: 0.85 };
     }
 
-    function focusMapNode(id) {
-      const n = MAP_NODES.find(x => x.id === id);
-      if (!n) return;
-      const rect = canvas.parentElement.getBoundingClientRect();
-      cam.targetZoom = 1.15;
-      cam.targetX = rect.width / 2 - n.x * cam.targetZoom;
-      cam.targetY = rect.height / 2 - n.y * cam.targetZoom;
-      selectedNode = n;
-      updateInspector(n);
-    }
+    canvas.addEventListener('mousedown', e => { dragging = true; lastMouse = { x: e.clientX, y: e.clientY }; });
+    window.addEventListener('mouseup', () => dragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      cam.x += e.clientX - lastMouse.x;
+      cam.y += e.clientY - lastMouse.y;
+      lastMouse = { x: e.clientX, y: e.clientY };
+    });
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.1 : 0.9;
+      cam.zoom = Math.min(2.2, Math.max(0.45, cam.zoom * factor));
+    }, { passive: false });
 
-    function mapZoom(factor) {
-      const rect = canvas.parentElement.getBoundingClientRect();
-      const cx = rect.width / 2;
-      const cy = rect.height / 2;
-      const newZ = Math.min(2.6, Math.max(0.35, cam.targetZoom * factor));
-      const f = newZ / cam.targetZoom;
-      cam.targetX = cx - (cx - cam.targetX) * f;
-      cam.targetY = cy - (cy - cam.targetY) * f;
-      cam.targetZoom = newZ;
-    }
+    function drawMap() {
+      if (STATE.view === 'map') {
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        ctx.clearRect(0, 0, w, h);
 
-    function updateInspector(node) {
-      const el = document.getElementById('mapInspector');
-      if (!node) return;
-      el.innerHTML = `
-        <strong style="color:${node.color};display:block;margin-bottom:4px;">${node.label}</strong>
-        <div style="color:var(--text);margin-bottom:6px;">${node.sub}</div>
-        <button class="mini-btn active" onclick="activateFromMap('${node.id}')">Abrir en Modo Acción</button>
-      `;
-    }
-
-    function activateFromMap(id) {
-      if (PANORAMAS.some(p => p.id === id)) selectPanorama(id);
-      if (id === 'analizar' || id === 'repasar') selectPanorama('estudio');
-      switchView('action');
-    }
-
-    function drawRoundRect(x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
-    }
-
-    function drawMapLoop(ts) {
-      if (currentView === 'map') {
-        cam.x += (cam.targetX - cam.x) * 0.16;
-        cam.y += (cam.targetY - cam.y) * 0.16;
-        cam.zoom += (cam.targetZoom - cam.zoom) * 0.16;
-        document.getElementById('mapZoomLabel').textContent = Math.round(cam.zoom * 100) + '%';
-
-        const rect = canvas.parentElement.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
-
-        // Grid sutil
-        const step = 36 * cam.zoom;
-        const ox = ((cam.x % step) + step) % step;
-        const oy = ((cam.y % step) + step) % step;
-        ctx.fillStyle = 'rgba(0, 229, 255, 0.12)';
-        for (let gx = ox; gx < rect.width; gx += step) {
-          for (let gy = oy; gy < rect.height; gy += step) {
-            ctx.fillRect(gx, gy, 1.3, 1.3);
-          }
-        }
-
+        // Fondo rejilla
         ctx.save();
         ctx.translate(cam.x, cam.y);
         ctx.scale(cam.zoom, cam.zoom);
 
-        // Edges
-        const pulse = (Math.sin(ts * 0.004) + 1) * 0.5;
-        MAP_EDGES.forEach(([aId, bId]) => {
-          const a = MAP_NODES.find(n => n.id === aId);
-          const b = MAP_NODES.find(n => n.id === bId);
-          if (!a || !b) return;
-          const activeEdge = a.id === state.panorama || b.id === state.panorama || a.id === 'inicio';
+        dashOffset -= 0.6;
+
+        // Dibujar conexiones
+        EDGES.forEach(([fromId, toId]) => {
+          const a = NODES.find(n => n.id === fromId);
+          const b = NODES.find(n => n.id === toId);
+          const isActive = STATE.activeRouteNodes.includes(fromId) && STATE.activeRouteNodes.includes(toId);
+
           ctx.beginPath();
-          ctx.moveTo(a.x, a.y + a.h / 2);
-          ctx.bezierCurveTo(a.x, (a.y + b.y) / 2, b.x, (a.y + b.y) / 2, b.x, b.y - b.h / 2);
-          ctx.strokeStyle = activeEdge ? `rgba(0, 229, 255, ${0.35 + pulse * 0.35})` : 'rgba(148, 163, 184, 0.22)';
-          ctx.lineWidth = activeEdge ? 2.2 : 1.3;
+          const startX = a.x + a.w;
+          const startY = a.y + a.h / 2;
+          const endX = b.x;
+          const endY = b.y + b.h / 2;
+          const cpX = (startX + endX) / 2;
+
+          ctx.moveTo(startX, startY);
+          ctx.bezierCurveTo(cpX, startY, cpX, endY, endX, endY);
+          ctx.strokeStyle = isActive ? '#38bdf8' : '#1e293b';
+          ctx.lineWidth = isActive ? 3 : 1.5;
+          if (isActive) {
+            ctx.setLineDash([8, 6]);
+            ctx.lineDashOffset = dashOffset;
+          } else {
+            ctx.setLineDash([]);
+          }
           ctx.stroke();
         });
 
-        // Nodes
-        MAP_NODES.forEach(n => {
-          const isActive = n.id === state.panorama || n.id === 'inicio' || (selectedNode && selectedNode.id === n.id);
-          const x = n.x - n.w / 2;
-          const y = n.y - n.h / 2;
+        ctx.setLineDash([]);
 
-          drawRoundRect(x, y, n.w, n.h, 12);
-          ctx.fillStyle = isActive ? '#152238' : '#0f172a';
+        // Dibujar nodos
+        NODES.forEach(n => {
+          const active = STATE.activeRouteNodes.includes(n.id);
+          ctx.fillStyle = active ? '#0f172a' : '#0b0f19';
+          ctx.strokeStyle = active ? '#38bdf8' : '#334155';
+          ctx.lineWidth = active ? 2.2 : 1.2;
+
+          ctx.beginPath();
+          ctx.roundRect(n.x, n.y, n.w, n.h, 12);
           ctx.fill();
-          ctx.lineWidth = isActive ? 2.4 : 1.2;
-          ctx.strokeStyle = isActive ? n.color : 'rgba(148, 163, 184, 0.35)';
           ctx.stroke();
 
-          ctx.fillStyle = '#f8fafc';
-          ctx.font = '700 13px Inter, Segoe UI, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(n.label, n.x, n.y - 3);
+          ctx.fillStyle = active ? '#f8fafc' : '#94a3b8';
+          ctx.font = 'bold 12px Inter, sans-serif';
+          ctx.fillText(n.label, n.x + 14, n.y + 27);
 
-          ctx.fillStyle = '#94a3b8';
-          ctx.font = '500 10.5px Inter, Segoe UI, sans-serif';
-          ctx.fillText(n.sub, n.x, n.y + 15);
+          ctx.fillStyle = active ? '#38bdf8' : '#64748b';
+          ctx.font = '11px JetBrains Mono, monospace';
+          ctx.fillText(n.sub, n.x + 14, n.y + 47);
         });
 
         ctx.restore();
       }
-      requestAnimationFrame(drawMapLoop);
+      requestAnimationFrame(drawMap);
     }
 
-    canvas.addEventListener('mousedown', (e) => {
-      draggingMap = true;
-      dragStart = { x: e.clientX - cam.targetX, y: e.clientY - cam.targetY };
-    });
-    window.addEventListener('mousemove', (e) => {
-      if (!draggingMap) return;
-      cam.targetX = e.clientX - dragStart.x;
-      cam.targetY = e.clientY - dragStart.y;
-    });
-    window.addEventListener('mouseup', () => { draggingMap = false; });
-
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const wx = (e.clientX - rect.left - cam.x) / cam.zoom;
-      const wy = (e.clientY - rect.top - cam.y) / cam.zoom;
-      const hit = MAP_NODES.find(n => Math.abs(wx - n.x) <= n.w / 2 && Math.abs(wy - n.y) <= n.h / 2);
-      if (hit) {
-        selectedNode = hit;
-        updateInspector(hit);
-      }
-    });
-
-    canvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-      const factor = e.deltaY < 0 ? 1.15 : 0.87;
-      const newZ = Math.min(2.6, Math.max(0.35, cam.targetZoom * factor));
-      const f = newZ / cam.targetZoom;
-      cam.targetX = mx - (mx - cam.targetX) * f;
-      cam.targetY = my - (my - cam.targetY) * f;
-      cam.targetZoom = newZ;
-    }, { passive: false });
-
-    window.addEventListener('resize', () => { if (currentView === 'map') resizeCanvas(); });
-
-    // ========================
     // INICIALIZACIÓN
-    // ========================
-    function renderAll() {
-      renderEmotions();
-      renderPanoramas();
-      renderContext();
-      renderSocial();
-      renderMusic();
-      renderProtocol();
-      renderVerdict();
-      updateApiStatusPill();
-    }
-
-    initMapButtons();
-    renderAll();
-    updateTimerUI();
+    onPanoramaChange();
+    requestAnimationFrame(drawMap);
   </script>
 </body>
 </html>
